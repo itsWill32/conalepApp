@@ -2,10 +2,12 @@ package com.example.conalepApp.ui.screens.pre_login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.School
@@ -17,11 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.conalepApp.R
 import com.example.conalepApp.data.DummyData
@@ -36,79 +41,95 @@ fun LandingScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     var showLoginDialog by remember { mutableStateOf(false) }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text("Menú", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleLarge)
-                Divider()
-                NavigationDrawerItem(
-                    label = { Text(text = "Nuestro Plantel") },
-                    selected = false,
-                    onClick = {
-                        navController.navigate("school_info")
-                        scope.launch { drawerState.close() }
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    ModalDrawerSheet(
+                        modifier = Modifier.fillMaxWidth(0.40f),
+                        drawerContainerColor = Color.White
+                    ) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                            Text(
+                                "Menú",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            )
+                            IconButton(
+                                onClick = { scope.launch { drawerState.close() } },
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = "Cerrar Menú")
+                            }
+                        }
+                        DrawerMenuItem(text = "Nuestro plantel") {
+                            navController.navigate("school_info")
+                            scope.launch { drawerState.close() }
+                        }
+                        DrawerMenuItem(text = "Carreras técnicas") {
+                            navController.navigate("careers_list")
+                            scope.launch { drawerState.close() }
+                        }
+                        DrawerMenuItem(text = "Conócenos") {
+                            navController.navigate("about_school")
+                            scope.launch { drawerState.close() }
+                        }
+                        DrawerMenuItem(text = "Acerca de") {
+                            navController.navigate("about_us")
+                            scope.launch { drawerState.close() }
+                        }
                     }
-                )
-                NavigationDrawerItem(
-                    label = { Text(text = "Carreras Técnicas") },
-                    selected = false,
-                    onClick = {
-                        navController.navigate("careers_list")
-                        scope.launch { drawerState.close() }
-                    }
-                )
-                NavigationDrawerItem(
-                    label = { Text(text = "Acerca de nosotros") },
-                    selected = false,
-                    onClick = {
-                        navController.navigate("about_us")
-                        scope.launch { drawerState.close() }
-                    }
-                )
+                }
             }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Image(
-                            painter = painterResource(id = R.drawable.conalep_logo_green),
-                            contentDescription = "Logo Conalep",
-                            modifier = Modifier.height(32.dp)
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {
+                                Image(
+                                    painter = painterResource(id = R.drawable.conalep_logo_green),
+                                    contentDescription = "Logo Conalep",
+                                    modifier = Modifier.height(32.dp)
+                                )
+                            },
+                            actions = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Button(
+                                        onClick = { showLoginDialog = true },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
+                                        modifier = Modifier.height(35.dp),
+                                        contentPadding = PaddingValues(horizontal = 16.dp)
+                                    ) {
+                                        Text("Inicia sesión", fontWeight = FontWeight.Bold)
+                                    }
+                                    IconButton(onClick = {
+                                        scope.launch { drawerState.apply { if (isClosed) open() else close() } }
+                                    }) {
+                                        Icon(Icons.Filled.Menu, contentDescription = "Menú")
+                                    }
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
                         )
-                    },
-                    actions = {
-                        Button(
-                            onClick = { showLoginDialog = true },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
-                        ) {
-                            Text("Inicia sesión", fontWeight = FontWeight.Bold)
-                        }
-                        IconButton(onClick = {
-                            scope.launch { drawerState.apply { if (isClosed) open() else close() } }
-                        }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menú")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-                )
-            }
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                item { HeaderSection() }
-                item { ValuesSection(navController) }
-                item { FamilySection() }
-                item { EducationOfferSection(navController) }
-                item { StatsBannerSection() }
-                item { FooterSection() }
+                    }
+                ) { innerPadding ->
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item { HeaderSection() }
+                        item { ValuesSection(navController) }
+                        item { FamilySection() }
+                        item { EducationOfferSection(navController) }
+                        item { StatsBannerSection() }
+                        item { FooterSection() }
+                    }
+                }
             }
         }
     }
@@ -123,6 +144,85 @@ fun LandingScreen(navController: NavController) {
                 }
             }
         )
+    }
+}
+
+@Composable
+fun DrawerMenuItem(text: String, onClick: () -> Unit) {
+    Text(
+        text = text,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp)
+    )
+}
+
+@Composable
+fun LoginDialog(onDismiss: () -> Unit, onLogin: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(contentAlignment = Alignment.TopEnd) {
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                }
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Inicia sesión",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = conalepGreen
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Correo electrónico",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    var emailText by remember { mutableStateOf("") }
+                    OutlinedTextField(
+                        value = emailText,
+                        onValueChange = { emailText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = Color(0xFFD9D9D9),
+                            focusedContainerColor = Color(0xFFD9D9D9),
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = conalepGreen,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                        ),
+                        placeholder = {
+                            Text("ejemplo@conalep.edu.mx", color = Color.Gray)
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = onLogin,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                    ) {
+                        Text(
+                            "Ingresar",
+                            fontWeight = FontWeight.Normal,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -337,7 +437,7 @@ fun FooterSection() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painterResource(id = R.drawable.footer_logo),
             contentDescription = "Logo Footer",
             modifier = Modifier.height(50.dp)
         )
@@ -348,29 +448,4 @@ fun FooterSection() {
             Text("> Comité de Ética", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Light)
         }
     }
-}
-
-@Composable
-fun LoginDialog(onDismiss: () -> Unit, onLogin: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Inicia sesión", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-        text = {
-            Column {
-                OutlinedTextField(value = "", onValueChange = {}, label = { Text("Correo electrónico") }, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = "", onValueChange = {}, label = { Text("Contraseña") }, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onLogin,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
-            ) {
-                Text("Ingresar")
-            }
-        },
-        dismissButton = {}
-    )
 }

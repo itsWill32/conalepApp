@@ -8,14 +8,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.conalepApp.R
 
-// Definimos la familia de fuentes con todos sus grosores
 val InriaSans = FontFamily(
     Font(R.font.inria_sans_light, FontWeight.Light),
     Font(R.font.inria_sans_regular, FontWeight.Normal),
     Font(R.font.inria_sans_bold, FontWeight.Bold)
 )
 
-// Actualizamos la Tipografía para que use InriaSans en todos los estilos
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = InriaSans,

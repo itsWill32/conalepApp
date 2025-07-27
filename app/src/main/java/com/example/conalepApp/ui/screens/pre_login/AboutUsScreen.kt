@@ -135,7 +135,6 @@ fun DeveloperCard(name: String, role: String, imageRes: Int) {
                     .clip(CircleShape)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // Estilos corregidos para la tarjeta
             Text(
                 role,
                 style = MaterialTheme.typography.bodySmall,

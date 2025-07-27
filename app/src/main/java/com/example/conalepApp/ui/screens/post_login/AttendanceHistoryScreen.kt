@@ -1,6 +1,5 @@
 package com.example.conalepApp.ui.screens.post_login
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,32 +11,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.conalepApp.data.AttendanceRecord
 import com.example.conalepApp.data.DummyData
-import com.example.conalepApp.data.Subject
 import com.example.conalepApp.ui.components.BottomNavigationBar
 import com.example.conalepApp.ui.components.ProfessorHeader
 import com.example.conalepApp.ui.components.SummaryCards
-import com.example.conalepApp.ui.theme.conalepDarkGreen
 import com.example.conalepApp.ui.theme.conalepGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubjectsScreen(navController: NavController) {
+fun AttendanceHistoryScreen(navController: NavController) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Materias",
-                        color = conalepGreen,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
+                title = { Text("Materias", color = conalepGreen, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
@@ -59,46 +50,39 @@ fun SubjectsScreen(navController: NavController) {
         ) {
             item { ProfessorHeader(teacher = DummyData.teacher) }
             item { SummaryCards(teacher = DummyData.teacher) }
-            items(DummyData.subjects) { subject ->
-                SubjectCard(subject = subject, navController = navController)
+            items(DummyData.attendanceHistory) { record ->
+                HistoryItemCard(record = record, navController = navController)
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubjectCard(subject: Subject, navController: NavController) {
+fun HistoryItemCard(record: AttendanceRecord, navController: NavController) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = subject.iconRes),
-                contentDescription = subject.name,
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(subject.name, fontWeight = FontWeight.Normal)
-                Text(subject.group, fontSize = 12.sp, fontWeight = FontWeight.Light)
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text("${subject.studentCount} estudiantes", fontSize = 12.sp, fontWeight = FontWeight.Light)
-                Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(record.subjectName, style = MaterialTheme.typography.titleMedium)
+            Text(record.date, style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("${record.present} presentes", color = conalepGreen, fontSize = 12.sp)
+                    Text("${record.absent} faltas", color = Color.Red, fontSize = 12.sp)
+                    Text("${record.late} retardo", color = Color(0xFFD07F1B), fontSize = 12.sp)
+                }
                 Button(
                     onClick = { navController.navigate("attendance") },
                     shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = conalepDarkGreen)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Text("Tomar asistencia", fontSize = 12.sp, fontWeight = FontWeight.Normal)
+                    Text("Editar")
                 }
             }
         }

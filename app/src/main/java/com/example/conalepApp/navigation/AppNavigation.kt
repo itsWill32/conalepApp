@@ -31,5 +31,7 @@ fun AppNavigation() {
         composable("subjects") { SubjectsScreen(navController) }
         composable("attendance") { AttendanceScreen(navController) }
 
+        composable("attendance_history") { AttendanceHistoryScreen(navController) }
+
     }
 }

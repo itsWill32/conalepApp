@@ -32,8 +32,6 @@ data class Subject(
     val group: String,
     val studentCount: Int,
     val classroom: String,
-    val schedule: String,
-    val days: List<String>,
     val iconRes: Int
 )
 
@@ -53,6 +51,15 @@ data class StudentAttendance(
     val name: String,
     var status: AttendanceStatus
 )
+
+data class AttendanceRecord(
+    val subjectName: String,
+    val date: String,
+    val present: Int,
+    val absent: Int,
+    val late: Int
+)
+
 
 
 
@@ -134,8 +141,6 @@ object DummyData {
             group = "1º - B",
             studentCount = 28,
             classroom = "",
-            schedule = "",
-            days = emptyList(),
             iconRes = R.drawable.ic_subjects
         ),
         Subject(
@@ -143,8 +148,6 @@ object DummyData {
             group = "3º - B",
             studentCount = 22,
             classroom = "Aula 201",
-            schedule = "12:00 - 14:00",
-            days = listOf("Mier", "Jue", "Vie"),
             iconRes = R.drawable.ic_subjects
         ),
         Subject(
@@ -152,8 +155,6 @@ object DummyData {
             group = "2º - B",
             studentCount = 32,
             classroom = "Aula 211",
-            schedule = "9:00 - 11:00",
-            days = listOf("Lun", "Mier", "Vie"),
             iconRes = R.drawable.ic_subjects
         )
     )
@@ -164,4 +165,11 @@ object DummyData {
         StudentAttendance(3, "Deyvit Sánchez Reyes", AttendanceStatus.PERMISSION),
         StudentAttendance(4, "William de Jesús García", AttendanceStatus.LATE)
     )
+
+    val attendanceHistory = listOf(
+        AttendanceRecord("Matemáticas", "15 de julio, 2025", 25, 2, 1),
+        AttendanceRecord("Química", "14 de julio, 2025", 20, 1, 1),
+        AttendanceRecord("Física", "13 de julio, 2025", 30, 2, 0)
+    )
+
 }
