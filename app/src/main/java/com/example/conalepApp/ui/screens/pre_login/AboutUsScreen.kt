@@ -84,8 +84,8 @@ fun AboutUsScreen(navController: NavController) {
                     imageRes = R.drawable.perfil_alberto
                 )
                 DeveloperCard(
-                    name = "William de Jesús Espinoza García",
-                    role = "Diseñador UX/UI",
+                    name = "William de Jesús Espinosa García",
+                    role = "Desarrollador Movil",
                     imageRes = R.drawable.perfil_alberto
                 )
             }
