@@ -11,73 +11,72 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.conalepApp.R
 import com.example.conalepApp.data.DummyData
 import com.example.conalepApp.data.NotificationItem
+import com.example.conalepApp.repository.AuthRepository
 import com.example.conalepApp.ui.theme.conalepGreen
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+// En tu NotificationsScreen.kt actual, reemplaza todo con esto:
+
 @Composable
 fun NotificationsScreen(navController: NavController) {
-    val groupedNotifications = remember {
-        DummyData.notifications.groupBy {
-            when {
-                it.timestamp.contains("min") || it.timestamp.contains("hora") -> "Hoy"
-                it.timestamp.contains("Ayer") -> "Ayer"
-                else -> it.timestamp
-            }
+    val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
+    var userType by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Obtener tipo de usuario
+    LaunchedEffect(Unit) {
+        authRepository.userData.collect { user ->
+            userType = user?.userType
+            isLoading = false
         }
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Notificaciones",
-                        color = conalepGreen,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            groupedNotifications.forEach { (date, notifications) ->
-                stickyHeader {
-                    NotificationGroupHeader(date = date)
-                }
-                items(notifications) { notification ->
-                    NotificationItemCard(notification = notification)
+            CircularProgressIndicator(color = conalepGreen)
+        }
+    } else {
+        when (userType) {
+            "maestro" -> TeacherNotificationsScreen(navController)
+            "alumno" -> StudentNotificationsScreen(navController)
+            else -> {
+                // Error o tipo de usuario no válido
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Error: Tipo de usuario no válido",
+                        color = Color.Red,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
     }
 }
-
 @Composable
 fun NotificationGroupHeader(date: String) {
     Row(

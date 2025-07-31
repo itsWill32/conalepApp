@@ -37,7 +37,6 @@ fun BottomNavigationBar(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             val items = listOf(
-                BottomNavItem("profile", R.drawable.ic_settings_outlined),
                 BottomNavItem("notifications", R.drawable.ic_messages_outline),
                 BottomNavItem("dashboard", R.drawable.ic_home_outlined),
                 BottomNavItem("subjects", R.drawable.ic_school_outlined),

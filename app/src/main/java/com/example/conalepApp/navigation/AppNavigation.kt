@@ -24,14 +24,38 @@ fun AppNavigation() {
         composable("about_us") { AboutUsScreen(navController) }
         composable("about_school") { AboutSchoolScreen(navController) }
 
-
         composable("dashboard") { DashboardScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
         composable("subjects") { SubjectsScreen(navController) }
-        composable("attendance") { AttendanceScreen(navController) }
 
-        composable("attendance_history") { AttendanceHistoryScreen(navController) }
+        composable("attendance/{materiaId}") { backStackEntry ->
+            val materiaId = backStackEntry.arguments?.getString("materiaId")?.toIntOrNull() ?: 0
+            AttendanceScreen(navController, materiaId)
+        }
+        composable("attendance") {
+            AttendanceScreen(navController, 0)
+        }
 
+        composable("attendance_history/{materiaId}") { backStackEntry ->
+            val materiaId = backStackEntry.arguments?.getString("materiaId")?.toIntOrNull() ?: 0
+            AttendanceHistoryScreen(navController, materiaId)
+        }
+
+        // NUEVA RUTA: Editar asistencia de fecha específica
+        composable("attendance_edit/{materiaId}/{fecha}") { backStackEntry ->
+            val materiaId = backStackEntry.arguments?.getString("materiaId")?.toIntOrNull() ?: 0
+            val fecha = backStackEntry.arguments?.getString("fecha") ?: ""
+            AttendanceEditScreen(navController, materiaId, fecha)
+        }
+        composable("teacher_notifications") {
+            TeacherNotificationsScreen(navController)
+        }
+
+        // Para maestros - crear nueva notificación
+        composable("create_notification") {
+            CreateNotificationScreen(navController)
+        }
     }
+
 }
