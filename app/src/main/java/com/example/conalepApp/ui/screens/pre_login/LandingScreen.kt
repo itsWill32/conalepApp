@@ -33,6 +33,12 @@ import com.example.conalepApp.data.DummyData
 import com.example.conalepApp.ui.theme.conalepFooter
 import com.example.conalepApp.ui.theme.conalepGreen
 import kotlinx.coroutines.launch
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import com.example.conalepApp.repository.AuthRepository
+import com.example.conalepApp.api.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,8 +143,10 @@ fun LandingScreen(navController: NavController) {
     if (showLoginDialog) {
         LoginDialog(
             onDismiss = { showLoginDialog = false },
-            onLogin = {
+            onLogin = { user ->
                 showLoginDialog = false
+                // Aquí podríamos guardar los datos del usuario si es necesario
+                println("Usuario logueado: ${user.fullName} (${user.userType})")
                 navController.navigate("dashboard") {
                     popUpTo("landing") { inclusive = true }
                 }
@@ -159,9 +167,16 @@ fun DrawerMenuItem(text: String, onClick: () -> Unit) {
             .padding(vertical = 16.dp)
     )
 }
-
 @Composable
-fun LoginDialog(onDismiss: () -> Unit, onLogin: () -> Unit) {
+fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
+    val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
+    val scope = rememberCoroutineScope()
+
+    var emailText by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -189,10 +204,13 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: () -> Unit) {
                         fontWeight = FontWeight.Normal
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    var emailText by remember { mutableStateOf("") }
+
                     OutlinedTextField(
                         value = emailText,
-                        onValueChange = { emailText = it },
+                        onValueChange = {
+                            emailText = it
+                            errorMessage = ""
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -204,28 +222,68 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: () -> Unit) {
                             unfocusedTextColor = Color.Black
                         ),
                         placeholder = {
-                            Text("ejemplo@conalep.edu.mx", color = Color.Gray)
-                        }
+                            Text("test@conalep.edu.mx", color = Color.Gray)
+                        },
+                        enabled = !isLoading
                     )
+
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            errorMessage,
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
+
                     Button(
-                        onClick = onLogin,
+                        onClick = {
+                            if (emailText.isBlank()) {
+                                errorMessage = "Por favor ingresa tu email"
+                                return@Button
+                            }
+
+                            isLoading = true
+                            errorMessage = ""
+
+                            scope.launch {
+                                authRepository.login(emailText)
+                                    .onSuccess { user ->
+                                        isLoading = false
+                                        onLogin(user)
+                                    }
+                                    .onFailure { exception ->
+                                        isLoading = false
+                                        errorMessage = exception.message ?: "Error de conexión"
+                                    }
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                        colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
+                        enabled = !isLoading
                     ) {
-                        Text(
-                            "Ingresar",
-                            fontWeight = FontWeight.Normal,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                "Ingresar",
+                                fontWeight = FontWeight.Normal,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
 @Composable
 fun HeaderSection() {
     Column(

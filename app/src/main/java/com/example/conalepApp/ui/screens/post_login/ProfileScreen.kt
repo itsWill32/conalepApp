@@ -17,15 +17,68 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.conalepApp.R
-import com.example.conalepApp.data.DummyData
-import com.example.conalepApp.data.User
+import com.example.conalepApp.api.User
 import com.example.conalepApp.ui.components.BottomNavigationBar
 import com.example.conalepApp.ui.theme.conalepGreen
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.launch
+import com.example.conalepApp.repository.AuthRepository
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
-    val user = DummyData.loggedInUser
+    val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
+    val scope = rememberCoroutineScope()
+
+    // Estados para manejar los datos del usuario
+    var user by remember { mutableStateOf<User?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    // Cargar datos del usuario al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                // Primero intenta obtener datos del almacenamiento local
+                val localUser = authRepository.getCurrentUser()
+                if (localUser != null) {
+                    user = localUser
+                    isLoading = false
+
+                    // Luego actualiza con datos del servidor en segundo plano
+                    val result = authRepository.getProfile()
+                    result.onSuccess { serverUser ->
+                        user = serverUser
+                    }.onFailure { exception ->
+                        // Solo muestra error si no teníamos datos locales
+                        if (localUser == null) {
+                            errorMessage = exception.message ?: "Error al cargar el perfil"
+                            isLoading = false
+                        }
+                    }
+                } else {
+                    // Si no hay datos locales, debe obtenerlos del servidor
+                    val result = authRepository.getProfile()
+                    result.onSuccess { serverUser ->
+                        user = serverUser
+                        isLoading = false
+                    }.onFailure { exception ->
+                        errorMessage = exception.message ?: "Error al cargar el perfil"
+                        isLoading = false
+                    }
+                }
+            } catch (e: Exception) {
+                errorMessage = "Error inesperado: ${e.message}"
+                isLoading = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -44,34 +97,212 @@ fun ProfileScreen(navController: NavController) {
         },
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
+
+        when {
+            isLoading -> {
+                LoadingProfileContent(innerPadding)
+            }
+            errorMessage.isNotEmpty() -> {
+                ErrorProfileContent(
+                    innerPadding = innerPadding,
+                    errorMessage = errorMessage,
+                    onRetry = {
+                        isLoading = true
+                        errorMessage = ""
+                        scope.launch {
+                            try {
+                                val result = authRepository.getProfile()
+                                result.onSuccess { userData ->
+                                    user = userData
+                                    isLoading = false
+                                }.onFailure { exception ->
+                                    errorMessage = exception.message ?: "Error al cargar el perfil"
+                                    isLoading = false
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = "Error inesperado: ${e.message}"
+                                isLoading = false
+                            }
+                        }
+                    }
+                )
+            }
+            user != null -> {
+                ProfileContent(
+                    innerPadding = innerPadding,
+                    user = user!!,
+                    onLogout = {
+                        scope.launch {
+                            try {
+                                authRepository.logout()
+                                navController.navigate("landing") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            } catch (e: Exception) {
+                                // Manejar error de logout si es necesario
+                                errorMessage = "Error al cerrar sesión: ${e.message}"
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingProfileContent(innerPadding: PaddingValues) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            ProfileHeader(user = user)
-            PersonalInfoCard(user = user)
-            AccountInfoCard()
+            CircularProgressIndicator(color = conalepGreen)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                "Cargando perfil...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorProfileContent(
+    innerPadding: PaddingValues,
+    errorMessage: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "Error al cargar el perfil",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    errorMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                ) {
+                    Text("Reintentar")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileContent(
+    innerPadding: PaddingValues,
+    user: User,
+    onLogout: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        ProfileHeader(user = user)
+        PersonalInfoCard(user = user)
+        ConfigurationCard(onLogout = onLogout)
+    }
+}
+
+@Composable
+fun ConfigurationCard(onLogout: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Configuración",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Botón de cerrar sesión
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onLogout() }
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_person_outlined),
+                    contentDescription = "Cerrar sesión",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.Red
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        "Cerrar sesión",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                    )
+                    Text(
+                        "Salir de la aplicación",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 fun ProfileHeader(user: User) {
-    val nameParts = user.name.split(" ")
-    val firstName = nameParts.firstOrNull() ?: ""
-    val lastName = nameParts.drop(1).joinToString(" ")
-
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Imagen de perfil por defecto (puedes personalizar según el tipo de usuario)
             Image(
-                painter = painterResource(id = user.profilePic),
+                painter = painterResource(
+                    id = when {
+                        user.isMaestro -> R.drawable.ic_profile_person // Ícono para maestros
+                        user.isAlumno -> R.drawable.ic_profile_person // Ícono para alumnos
+                        else -> R.drawable.ic_profile_person // Ícono por defecto
+                    }
+                ),
                 contentDescription = "Foto de perfil",
                 modifier = Modifier
                     .size(80.dp)
@@ -80,13 +311,18 @@ fun ProfileHeader(user: User) {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    "Carrera",
+                    "Tipo de usuario",
                     style = MaterialTheme.typography.labelMedium,
                     color = conalepGreen,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    user.career,
+                    when {
+                        user.isMaestro -> "Maestro"
+                        user.isAlumno -> "Alumno"
+                        user.isAdministrador -> "Administrador"
+                        else -> user.userType.replaceFirstChar { it.uppercase() }
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Light
                 )
@@ -94,14 +330,25 @@ fun ProfileHeader(user: User) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(firstName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Normal)
-            Text(lastName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Normal)
+            Text(
+                user.nombre,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Normal
+            )
+            Text(
+                "${user.apellido_paterno} ${user.apellido_materno}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Normal
+            )
         }
     }
 }
 
 @Composable
 fun PersonalInfoCard(user: User) {
+    var isEditing by remember { mutableStateOf(false) }
+    var editedPhone by remember { mutableStateOf(user.telefono ?: "") }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -112,23 +359,85 @@ fun PersonalInfoCard(user: User) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Informacion personal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                TextButton(onClick = { /* TODO */ }) {
-                    Text("Editar")
+                Text(
+                    "Información personal",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(
+                    onClick = {
+                        if (isEditing) {
+                            // Aquí podrías implementar la actualización del perfil
+                            // authRepository.updateProfile(editedPhone)
+                        }
+                        isEditing = !isEditing
+                    }
+                ) {
+                    Text(if (isEditing) "Guardar" else "Editar")
                 }
             }
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            InfoRow(iconRes = R.drawable.ic_profile_person, label = "Nombre", value = user.name)
-            InfoRow(iconRes = R.drawable.ic_email_outlined, label = "E-mail", value = user.email)
-            InfoRow(iconRes = R.drawable.ic_phone_outlined, label = "Telefono", value = user.phone)
-            InfoRow(iconRes = R.drawable.ic_location_outlined, label = "Dirección", value = user.address)
+            // Información no editable
+            InfoRow(
+                iconRes = R.drawable.ic_profile_person,
+                label = "Nombre completo",
+                value = user.fullName,
+                isEditing = false,
+                onValueChange = {}
+            )
+
+            InfoRow(
+                iconRes = R.drawable.ic_email_outlined,
+                label = "E-mail",
+                value = user.email,
+                isEditing = false,
+                onValueChange = {}
+            )
+
+            // Información específica para alumnos
+            if (user.isAlumno) {
+                user.matricula?.let { matricula ->
+                    InfoRow(
+                        iconRes = R.drawable.ic_profile_person,
+                        label = "Matrícula",
+                        value = matricula,
+                        isEditing = false,
+                        onValueChange = {}
+                    )
+                }
+
+                user.grado?.let { grado ->
+                    InfoRow(
+                        iconRes = R.drawable.ic_profile_person,
+                        label = "Grado",
+                        value = "${grado}º${user.grupo ?: ""}",
+                        isEditing = false,
+                        onValueChange = {}
+                    )
+                }
+            }
+
+            // Información editable
+            InfoRow(
+                iconRes = R.drawable.ic_phone_outlined,
+                label = "Teléfono",
+                value = editedPhone,
+                isEditing = isEditing,
+                onValueChange = { editedPhone = it }
+            )
         }
     }
 }
 
 @Composable
-fun InfoRow(@DrawableRes iconRes: Int, label: String, value: String) {
+fun InfoRow(
+    @DrawableRes iconRes: Int,
+    label: String,
+    value: String,
+    isEditing: Boolean = false,
+    onValueChange: (String) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,23 +450,32 @@ fun InfoRow(@DrawableRes iconRes: Int, label: String, value: String) {
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-            Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Normal)
-        }
-    }
-}
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
 
-@Composable
-fun AccountInfoCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 100.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Informacion de cuenta", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            if (isEditing && label == "Teléfono") {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text("Ingresa tu teléfono") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = conalepGreen
+                    )
+                )
+            } else {
+                Text(
+                    if (value.isBlank()) "No especificado" else value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Normal,
+                    color = if (value.isBlank()) Color.Gray else Color.Unspecified
+                )
+            }
         }
     }
 }

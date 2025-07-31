@@ -1,10 +1,5 @@
 package com.example.conalepApp.ui.screens.post_login
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,60 +12,54 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.conalepApp.R
-import com.example.conalepApp.data.AttendanceStatus
-import com.example.conalepApp.data.DummyData
-import com.example.conalepApp.data.StudentAttendance
-import com.example.conalepApp.ui.components.BottomNavigationBar
-import com.example.conalepApp.ui.theme.conalepDarkGreen
-import com.example.conalepApp.ui.theme.conalepGreen
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.launch
-import com.example.conalepApp.repository.AuthRepository
 import com.example.conalepApp.api.AlumnoAsistencia
-import com.example.conalepApp.api.ClaseInfo
 import com.example.conalepApp.api.AsistenciaItem
+import com.example.conalepApp.api.ClaseInfo
+import com.example.conalepApp.data.AttendanceStatus
+import com.example.conalepApp.repository.AuthRepository
+import com.example.conalepApp.ui.components.BottomNavigationBar
+import com.example.conalepApp.ui.theme.conalepGreen
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import com.example.conalepApp.api.AsistenciasFechaResponse
 
-data class AlumnoConAsistencia(
+data class AlumnoConAsistenciaEdit(
     val alumno: AlumnoAsistencia,
     var estado: AttendanceStatus = AttendanceStatus.PRESENT
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
+fun AttendanceEditScreen(
+    navController: NavController,
+    materiaId: Int = 0,
+    fecha: String = ""
+) {
     val context = LocalContext.current
     val authRepository = remember { AuthRepository(context) }
     val scope = rememberCoroutineScope()
 
     var claseInfo by remember { mutableStateOf<ClaseInfo?>(null) }
-    var alumnosConAsistencia by remember { mutableStateOf<List<AlumnoConAsistencia>>(emptyList()) }
+    var alumnosConAsistencia by remember { mutableStateOf<List<AlumnoConAsistenciaEdit>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
+    var hasChanges by remember { mutableStateOf(false) }
 
-    // Fecha actual
-    val fechaHoy = remember {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-    }
+    // Estado inicial para detectar cambios
+    var estadosIniciales by remember { mutableStateOf<Map<Int, AttendanceStatus>>(emptyMap()) }
 
-    // Cargar alumnos de la materia
-    LaunchedEffect(materiaId) {
-        if (materiaId <= 0) {
-            errorMessage = "ID de materia inválido"
+    // Cargar asistencias de la fecha específica
+    LaunchedEffect(materiaId, fecha) {
+        if (materiaId <= 0 || fecha.isEmpty()) {
+            errorMessage = "Parámetros inválidos (ID: $materiaId, Fecha: $fecha)"
             isLoading = false
             return@LaunchedEffect
         }
@@ -81,8 +70,8 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                 .onSuccess { response ->
                     claseInfo = response.clase
 
-                    // Luego intentar cargar asistencias existentes del día
-                    authRepository.getAsistenciasPorFecha(materiaId, fechaHoy)
+                    // Luego cargar asistencias existentes de la fecha específica
+                    authRepository.getAsistenciasPorFecha(materiaId, fecha)
                         .onSuccess { asistenciasResponse ->
                             // HAY asistencias guardadas - cargarlas
                             val asistenciasMap = asistenciasResponse.asistencias.associateBy { it.alumno_id }
@@ -94,24 +83,36 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                                     "Ausente" -> AttendanceStatus.ABSENT
                                     "Retardo" -> AttendanceStatus.LATE
                                     "Justificado" -> AttendanceStatus.PERMISSION
-                                    else -> AttendanceStatus.PRESENT // Por defecto
+                                    else -> AttendanceStatus.PRESENT
                                 }
-                                AlumnoConAsistencia(alumno, estado)
+                                AlumnoConAsistenciaEdit(alumno, estado)
                             }
+
+                            // Guardar estados iniciales para detectar cambios
+                            estadosIniciales = alumnosConAsistencia.associate {
+                                it.alumno.alumno_id to it.estado
+                            }
+
                             isLoading = false
                         }
                         .onFailure {
-                            // NO hay asistencias guardadas - empezar en blanco (todos presentes)
-                            alumnosConAsistencia = response.alumnos.map { alumno ->
-                                AlumnoConAsistencia(alumno, AttendanceStatus.PRESENT)
-                            }
+                            errorMessage = "No se encontraron asistencias para esta fecha"
                             isLoading = false
                         }
                 }
                 .onFailure { exception ->
-                    errorMessage = exception.message ?: "Error al cargar alumnos"
+                    errorMessage = exception.message ?: "Error al cargar datos"
                     isLoading = false
                 }
+        }
+    }
+
+    // Detectar cambios
+    LaunchedEffect(alumnosConAsistencia) {
+        if (estadosIniciales.isNotEmpty()) {
+            hasChanges = alumnosConAsistencia.any { alumno ->
+                estadosIniciales[alumno.alumno.alumno_id] != alumno.estado
+            }
         }
     }
 
@@ -120,13 +121,19 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Pase de lista",
+                        "Editar asistencia",
                         color = conalepGreen,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        if (hasChanges) {
+                            // Mostrar diálogo de confirmación si hay cambios
+                            // Por ahora, simplemente navegar hacia atrás
+                        }
+                        navController.popBackStack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                 },
@@ -151,25 +158,52 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = conalepGreen)
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = conalepGreen)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Cargando asistencia...", color = conalepGreen)
+                        }
                     }
                 }
             } else if (errorMessage.isNotEmpty()) {
                 item {
-                    Text(
-                        errorMessage,
-                        color = Color.Red,
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Error",
+                                color = Color.Red,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                errorMessage,
+                                color = Color.Red,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { navController.popBackStack() },
+                                colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                            ) {
+                                Text("Volver al historial")
+                            }
+                        }
+                    }
                 }
             } else {
                 item {
-                    AttendanceHeaderReal(
+                    AttendanceEditHeaderReal(
                         claseInfo = claseInfo,
-                        fecha = fechaHoy,
+                        fecha = fecha,
+                        hasChanges = hasChanges,
                         onSave = {
-                            // Guardar asistencias (igual que antes)
                             scope.launch {
                                 isSaving = true
                                 val asistencias = alumnosConAsistencia.map { alumnoConAsistencia ->
@@ -184,13 +218,18 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                                     )
                                 }
 
-                                authRepository.guardarAsistencias(materiaId, fechaHoy, asistencias)
+                                authRepository.guardarAsistencias(materiaId, fecha, asistencias)
                                     .onSuccess {
-                                        // Mostrar mensaje de éxito y volver
+                                        // Actualizar estados iniciales
+                                        estadosIniciales = alumnosConAsistencia.associate {
+                                            it.alumno.alumno_id to it.estado
+                                        }
+                                        hasChanges = false
+                                        // Volver al historial
                                         navController.popBackStack()
                                     }
                                     .onFailure { exception ->
-                                        errorMessage = exception.message ?: "Error al guardar asistencias"
+                                        errorMessage = exception.message ?: "Error al guardar cambios"
                                     }
                                 isSaving = false
                             }
@@ -202,7 +241,36 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                     )
                 }
 
-                item { AttendanceSummaryReal(roster = alumnosConAsistencia) }
+                item {
+                    AttendanceSummaryEdit(roster = alumnosConAsistencia)
+                }
+
+                // Mostrar indicador de cambios
+                if (hasChanges) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "⚠️",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Tienes cambios sin guardar",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF8B5000)
+                                )
+                            }
+                        }
+                    }
+                }
 
                 item {
                     Text(
@@ -214,7 +282,7 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                 }
 
                 items(alumnosConAsistencia, key = { it.alumno.alumno_id }) { alumnoConAsistencia ->
-                    StudentAttendanceRowReal(
+                    StudentAttendanceRowEdit(
                         alumnoConAsistencia = alumnoConAsistencia,
                         onStatusChange = { newStatus ->
                             alumnosConAsistencia = alumnosConAsistencia.map {
@@ -231,200 +299,10 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
 }
 
 @Composable
-fun AttendanceHeader(navController: NavController) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Pase de lista",
-                color = conalepGreen,
-                fontWeight = FontWeight.Bold
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Chip(label = "Matemáticas", isSelected = true, fontWeight = FontWeight.Light)
-                Spacer(modifier = Modifier.width(8.dp))
-                Chip(label = "3º - B", fontWeight = FontWeight.Light)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Lunes 14 de julio, 2025",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Light
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallIconButton(text = "Registrar", icon = Icons.Default.Description, onClick = { /* TODO */ })
-                    SmallIconButton(text = "Historial", icon = Icons.Default.History, onClick = { navController.navigate("attendance_history") })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SmallIconButton(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = conalepDarkGreen)
-    ) {
-        Icon(icon, contentDescription = text, modifier = Modifier.size(14.dp))
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(text, fontSize = 12.sp, fontWeight = FontWeight.Light)
-    }
-}
-
-@Composable
-fun AttendanceSummary(roster: List<StudentAttendance>) {
-    val lateColor = Color(0xFFD07F1B)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        val presentCount = roster.count { it.status == AttendanceStatus.PRESENT }
-        val absentCount = roster.count { it.status == AttendanceStatus.ABSENT }
-        val permissionCount = roster.count { it.status == AttendanceStatus.PERMISSION }
-        val lateCount = roster.count { it.status == AttendanceStatus.LATE }
-
-        SummaryCard(modifier = Modifier.weight(1f), count = presentCount, label = "Presente", color = conalepGreen)
-        SummaryCard(modifier = Modifier.weight(1f), count = absentCount, label = "Ausente", color = Color.Red)
-        SummaryCard(modifier = Modifier.weight(1f), count = permissionCount, label = "Permiso", color = Color.Blue)
-        SummaryCard(modifier = Modifier.weight(1f), count = lateCount, label = "Retardo", color = lateColor)
-    }
-}
-
-@Composable
-fun SummaryCard(modifier: Modifier = Modifier, count: Int, label: String, color: Color) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                count.toString(),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-            Text(
-                label,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Light
-            )
-        }
-    }
-}
-
-@Composable
-fun StudentAttendanceRow(student: StudentAttendance, onStatusChange: (AttendanceStatus) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${student.id} - ${student.name}",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Normal
-            )
-
-            Row {
-                StatusIconButton(
-                    status = AttendanceStatus.PRESENT,
-                    isSelected = student.status == AttendanceStatus.PRESENT,
-                    onClick = { onStatusChange(AttendanceStatus.PRESENT) }
-                )
-                StatusIconButton(
-                    status = AttendanceStatus.ABSENT,
-                    isSelected = student.status == AttendanceStatus.ABSENT,
-                    onClick = { onStatusChange(AttendanceStatus.ABSENT) }
-                )
-                StatusIconButton(
-                    status = AttendanceStatus.PERMISSION,
-                    isSelected = student.status == AttendanceStatus.PERMISSION,
-                    onClick = { onStatusChange(AttendanceStatus.PERMISSION) }
-                )
-                StatusIconButton(
-                    status = AttendanceStatus.LATE,
-                    isSelected = student.status == AttendanceStatus.LATE,
-                    onClick = { onStatusChange(AttendanceStatus.LATE) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun StatusIconButton(status: AttendanceStatus, isSelected: Boolean, onClick: () -> Unit) {
-    val (iconRes, label, color) = when (status) {
-        AttendanceStatus.PRESENT -> Triple(R.drawable.ic_present, "Presente", Color(0xFF4CAF50))
-        AttendanceStatus.ABSENT -> Triple(R.drawable.ic_absent, "Ausente", Color(0xFFF44336))
-        AttendanceStatus.PERMISSION -> Triple(R.drawable.ic_permission, "Permiso", Color(0xFF2196F3))
-        AttendanceStatus.LATE -> Triple(R.drawable.ic_delay, "Retardo", Color(0xFFD07F1B))
-    }
-
-    val iconColor = if (isSelected) Color.White else Color.Black
-    val textColor = if (isSelected) color else Color.Transparent
-    val textHeight = 16.dp
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 40.dp, height = 32.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                .background(if (isSelected) color else Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = iconRes),
-                contentDescription = label,
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(iconColor)
-            )
-        }
-        Text(label, fontSize = 10.sp, color = textColor, modifier = Modifier.height(textHeight))
-    }
-}
-
-@Composable
-fun Chip(label: String, isSelected: Boolean = false, fontWeight: FontWeight = FontWeight.Bold) {
-    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Text(label, fontSize = 12.sp, color = contentColor, fontWeight = fontWeight)
-    }
-}
-@Composable
-fun AttendanceHeaderReal(
+fun AttendanceEditHeaderReal(
     claseInfo: ClaseInfo?,
     fecha: String,
+    hasChanges: Boolean,
     onSave: () -> Unit,
     onHistory: (Int) -> Unit,
     isSaving: Boolean
@@ -435,7 +313,7 @@ fun AttendanceHeaderReal(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Pase de lista",
+                "Editando asistencia",
                 color = conalepGreen,
                 fontWeight = FontWeight.Bold
             )
@@ -455,18 +333,19 @@ fun AttendanceHeaderReal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    fecha,
+                    formatearFechaEdit(fecha),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Light
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallIconButtonReal(
-                        text = if (isSaving) "Guardando..." else "Registrar",
+                    SmallIconButtonEdit(
+                        text = if (isSaving) "Guardando..." else if (hasChanges) "Guardar cambios" else "Guardar",
                         icon = Icons.Default.Description,
                         onClick = onSave,
-                        enabled = !isSaving
+                        enabled = !isSaving && hasChanges,
+                        highlighted = hasChanges
                     )
-                    SmallIconButtonReal(
+                    SmallIconButtonEdit(
                         text = "Historial",
                         icon = Icons.Default.History,
                         onClick = {
@@ -481,17 +360,23 @@ fun AttendanceHeaderReal(
 }
 
 @Composable
-fun SmallIconButtonReal(
+fun SmallIconButtonEdit(
     text: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    highlighted: Boolean = false
 ) {
+    val backgroundColor = if (highlighted) Color(0xFFFF6B35) else conalepGreen
+
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = conalepDarkGreen),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            disabledContainerColor = Color.Gray
+        ),
         enabled = enabled
     ) {
         if (!enabled && text.contains("Guardando")) {
@@ -509,7 +394,7 @@ fun SmallIconButtonReal(
 }
 
 @Composable
-fun AttendanceSummaryReal(roster: List<AlumnoConAsistencia>) {
+fun AttendanceSummaryEdit(roster: List<AlumnoConAsistenciaEdit>) {
     val lateColor = Color(0xFFD07F1B)
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         val presentCount = roster.count { it.estado == AttendanceStatus.PRESENT }
@@ -525,8 +410,8 @@ fun AttendanceSummaryReal(roster: List<AlumnoConAsistencia>) {
 }
 
 @Composable
-fun StudentAttendanceRowReal(
-    alumnoConAsistencia: AlumnoConAsistencia,
+fun StudentAttendanceRowEdit(
+    alumnoConAsistencia: AlumnoConAsistenciaEdit,
     onStatusChange: (AttendanceStatus) -> Unit
 ) {
     Card(
@@ -567,5 +452,16 @@ fun StudentAttendanceRowReal(
                 )
             }
         }
+    }
+}
+
+private fun formatearFechaEdit(fecha: String): String {
+    return try {
+        val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val formatoSalida = SimpleDateFormat("EEEE dd 'de' MMMM, yyyy", Locale("es", "ES"))
+        val fechaParsed = formatoEntrada.parse(fecha)
+        fechaParsed?.let { formatoSalida.format(it) } ?: fecha
+    } catch (e: Exception) {
+        fecha
     }
 }
