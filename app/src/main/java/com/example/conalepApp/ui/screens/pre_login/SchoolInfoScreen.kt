@@ -83,7 +83,7 @@ fun SchoolInfoScreen(navController: NavController) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                     Text(
-                        "Chiapas de corzo",
+                        "Chiapa de corzo",
                         style = MaterialTheme.typography.titleLarge,
                         color = conalepGreen,
                         fontWeight = FontWeight.Bold
