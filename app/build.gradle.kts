@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.conalepApp" // O el namespace que estés usando
+    namespace = "com.example.conalepApp" 
     compileSdk = 34
 
     defaultConfig {
@@ -38,7 +38,6 @@ android {
     buildFeatures {
         compose = true
     }
-    // ESTE BLOQUE ES EL MÁS IMPORTANTE PARA RESOLVER "Unresolved reference"
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
