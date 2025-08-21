@@ -49,7 +49,6 @@ android {
 }
 
 dependencies {
-    // BOM de Compose para mantener las librerías consistentes
     val composeBom = platform("androidx.compose:compose-bom:2024.05.00")
     implementation(composeBom)
     implementation(libs.ui)
@@ -57,18 +56,15 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
 
-    // Dependencias básicas de Android
     implementation(libs.androidx.core.ktx.v1131)
     implementation(libs.androidx.lifecycle.runtime.ktx.v280)
     implementation(libs.androidx.activity.compose.v190)
 
-    // Dependencias para el proyecto final
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(libs.androidx.lifecycle.viewmodel.compose.v280)
     implementation(libs.coil.compose)
     implementation(libs.androidx.material.icons.extended)
 
-    // Dependencias de prueba
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit.v115)
     androidTestImplementation(libs.androidx.espresso.core.v351)
