@@ -1,11 +1,9 @@
 package com.example.conalepApp.api
 
-// Request models
 data class LoginRequest(
     val email: String
 )
 
-// Response models
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String,
@@ -128,9 +126,7 @@ data class HistorialAsistenciasResponse(
     val clase: ClaseInfo,
     val historial: List<HistorialItem>
 )
-// Agregar estas data classes a tu archivo api/Models.kt
 
-// Modelos para notificaciones
 data class MateriaBasica(
     val clase_id: Int,
     val nombre_clase: String,
@@ -166,14 +162,13 @@ data class CrearNotificacionRequest(
     val destinatarios: List<Int>
 )
 
-// En tu archivo de modelos, cambia:
 data class NotificacionItem(
     val notificacion_id: Int,
     val titulo: String,
     val mensaje: String,
     val tipo_destinatario: String,
     val status: String,
-    val fecha_creacion: String?, // ← Cambiar a nullable
+    val fecha_creacion: String?,
     val destinatarios_info: String? = null,
     val creado_por_tipo: String? = null
 )
