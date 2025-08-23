@@ -42,7 +42,6 @@ fun StudentNotificationsScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Función para cargar notificaciones
     fun cargarNotificaciones() {
         scope.launch {
             isLoading = true
@@ -60,12 +59,10 @@ fun StudentNotificationsScreen(navController: NavController) {
         }
     }
 
-    // Cargar notificaciones al inicio
     LaunchedEffect(Unit) {
         cargarNotificaciones()
     }
 
-    // Agrupar notificaciones por fecha
     val groupedNotifications = remember(notificaciones) {
         notificaciones.groupBy { notificacion ->
             formatearFechaParaGrupo(notificacion.fecha_creacion ?: "Sin fecha")
@@ -260,7 +257,6 @@ fun StudentNotificationCard(notification: NotificacionItem) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono de notificación basado en el tipo
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -296,7 +292,6 @@ fun StudentNotificationCard(notification: NotificacionItem) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Mostrar tipo de notificación
                 Text(
                     getTipoNotificacionText(notification.tipo_destinatario),
                     style = MaterialTheme.typography.bodySmall,
@@ -330,7 +325,6 @@ fun StudentNotificationCard(notification: NotificacionItem) {
     }
 }
 
-// Funciones helper para formatear fechas y obtener iconos
 private fun formatearFechaParaGrupo(fechaCreacion: String): String {
     if (fechaCreacion.isNullOrBlank()) {
         return "Sin fecha"
