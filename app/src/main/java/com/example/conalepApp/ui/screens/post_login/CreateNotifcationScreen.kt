@@ -58,7 +58,6 @@ fun CreateNotificationScreen(navController: NavController) {
         "Alumno_Especifico" to "Alumnos específicos"
     )
 
-    // Cargar destinatarios disponibles
     LaunchedEffect(Unit) {
         scope.launch {
             authRepository.getDestinatariosParaNotificacion()
@@ -99,7 +98,6 @@ fun CreateNotificationScreen(navController: NavController) {
                 .onSuccess { result ->
                     successMessage = "Notificación enviada para aprobación exitosamente"
                     isSending = false
-                    // Navegar de regreso después de un delay
                     kotlinx.coroutines.delay(2000)
                     navController.popBackStack()
                 }
@@ -183,7 +181,6 @@ fun CreateNotificationScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Título
                 OutlinedTextField(
                     value = titulo,
                     onValueChange = { titulo = it },
@@ -197,7 +194,6 @@ fun CreateNotificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Mensaje
                 OutlinedTextField(
                     value = mensaje,
                     onValueChange = { mensaje = it },
@@ -213,7 +209,6 @@ fun CreateNotificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Tipo de destinatario
                 Text(
                     "Tipo de destinatario",
                     style = MaterialTheme.typography.titleMedium,
@@ -256,7 +251,6 @@ fun CreateNotificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Selección de destinatarios
                 when (tipoDestinatario) {
                     "Materia_Completa" -> {
                         SeleccionMateriaUnica(
@@ -283,7 +277,6 @@ fun CreateNotificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Botón enviar
                 Button(
                     onClick = { enviarNotificacion() },
                     modifier = Modifier.fillMaxWidth(),
@@ -306,7 +299,6 @@ fun CreateNotificationScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Información adicional
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FF)),
                     modifier = Modifier.fillMaxWidth()
@@ -454,12 +446,10 @@ fun SeleccionAlumnosConFiltros(
     var grupoFiltro by remember { mutableStateOf("Todos") }
     var showFilters by remember { mutableStateOf(false) }
 
-    // Obtener grados únicos
     val grados = remember(alumnos) {
         listOf("Todos") + alumnos.map { it.grado }.distinct().sorted()
     }
 
-    // Obtener grupos únicos según el grado seleccionado
     val grupos = remember(alumnos, gradoFiltro) {
         if (gradoFiltro == "Todos") {
             listOf("Todos") + alumnos.map { it.grupo }.distinct().sorted()
@@ -469,19 +459,15 @@ fun SeleccionAlumnosConFiltros(
         }
     }
 
-    // Filtrar alumnos
     val filteredAlumnos = remember(alumnos, searchQuery, gradoFiltro, grupoFiltro) {
         alumnos.filter { alumno ->
-            // Filtro por texto
             val cumpleTexto = if (searchQuery.isBlank()) true else {
                 alumno.nombreCompleto.contains(searchQuery, ignoreCase = true) ||
                         alumno.matricula.contains(searchQuery, ignoreCase = true)
             }
 
-            // Filtro por grado
             val cumpleGrado = gradoFiltro == "Todos" || alumno.grado == gradoFiltro
 
-            // Filtro por grupo
             val cumpleGrupo = grupoFiltro == "Todos" || alumno.grupo == grupoFiltro
 
             cumpleTexto && cumpleGrado && cumpleGrupo
@@ -497,7 +483,6 @@ fun SeleccionAlumnosConFiltros(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // Campo de búsqueda
     OutlinedTextField(
         value = searchQuery,
         onValueChange = { searchQuery = it },
@@ -528,7 +513,6 @@ fun SeleccionAlumnosConFiltros(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // Botón para mostrar filtros avanzados
     TextButton(
         onClick = { showFilters = !showFilters },
         colors = ButtonDefaults.textButtonColors(contentColor = conalepGreen)
@@ -541,7 +525,6 @@ fun SeleccionAlumnosConFiltros(
         Text("Filtros por grado y grupo")
     }
 
-    // Filtros avanzados
     if (showFilters) {
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
@@ -552,7 +535,6 @@ fun SeleccionAlumnosConFiltros(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Filtro por grado
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             "Grado:",
@@ -603,7 +585,6 @@ fun SeleccionAlumnosConFiltros(
                         }
                     }
 
-                    // Filtro por grupo
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             "Grupo:",
@@ -670,7 +651,6 @@ fun SeleccionAlumnosConFiltros(
         Spacer(modifier = Modifier.height(8.dp))
     }
 
-    // Mostrar contador
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -693,7 +673,6 @@ fun SeleccionAlumnosConFiltros(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // Botones de selección rápida
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -726,7 +705,6 @@ fun SeleccionAlumnosConFiltros(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    // Lista de alumnos
     LazyColumn(
         modifier = Modifier.height(200.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
