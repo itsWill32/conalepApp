@@ -36,34 +36,28 @@ fun ProfileScreen(navController: NavController) {
     val authRepository = remember { AuthRepository(context) }
     val scope = rememberCoroutineScope()
 
-    // Estados para manejar los datos del usuario
     var user by remember { mutableStateOf<User?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Cargar datos del usuario al iniciar la pantalla
     LaunchedEffect(Unit) {
         scope.launch {
             try {
-                // Primero intenta obtener datos del almacenamiento local
                 val localUser = authRepository.getCurrentUser()
                 if (localUser != null) {
                     user = localUser
                     isLoading = false
 
-                    // Luego actualiza con datos del servidor en segundo plano
                     val result = authRepository.getProfile()
                     result.onSuccess { serverUser ->
                         user = serverUser
                     }.onFailure { exception ->
-                        // Solo muestra error si no teníamos datos locales
                         if (localUser == null) {
                             errorMessage = exception.message ?: "Error al cargar el perfil"
                             isLoading = false
                         }
                     }
                 } else {
-                    // Si no hay datos locales, debe obtenerlos del servidor
                     val result = authRepository.getProfile()
                     result.onSuccess { serverUser ->
                         user = serverUser
@@ -139,7 +133,6 @@ fun ProfileScreen(navController: NavController) {
                                     popUpTo(0) { inclusive = true }
                                 }
                             } catch (e: Exception) {
-                                // Manejar error de logout si es necesario
                                 errorMessage = "Error al cerrar sesión: ${e.message}"
                             }
                         }
@@ -254,7 +247,6 @@ fun ConfigurationCard(onLogout: () -> Unit) {
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Botón de cerrar sesión
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -294,13 +286,12 @@ fun ProfileHeader(user: User) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Imagen de perfil por defecto (puedes personalizar según el tipo de usuario)
             Image(
                 painter = painterResource(
                     id = when {
-                        user.isMaestro -> R.drawable.ic_profile_person // Ícono para maestros
-                        user.isAlumno -> R.drawable.ic_profile_person // Ícono para alumnos
-                        else -> R.drawable.ic_profile_person // Ícono por defecto
+                        user.isMaestro -> R.drawable.ic_profile_person 
+                        user.isAlumno -> R.drawable.ic_profile_person 
+                        else -> R.drawable.ic_profile_person 
                     }
                 ),
                 contentDescription = "Foto de perfil",
@@ -367,7 +358,6 @@ fun PersonalInfoCard(user: User) {
                 TextButton(
                     onClick = {
                         if (isEditing) {
-                            // Aquí podrías implementar la actualización del perfil
                             // authRepository.updateProfile(editedPhone)
                         }
                         isEditing = !isEditing
