@@ -62,12 +62,10 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
     var errorMessage by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
 
-    // Fecha actual
     val fechaHoy = remember {
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
     }
 
-    // Cargar alumnos de la materia
     LaunchedEffect(materiaId) {
         if (materiaId <= 0) {
             errorMessage = "ID de materia inválido"
@@ -76,15 +74,12 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
         }
 
         scope.launch {
-            // Primero obtener alumnos de la materia
             authRepository.getAlumnosParaAsistencia(materiaId)
                 .onSuccess { response ->
                     claseInfo = response.clase
 
-                    // Luego intentar cargar asistencias existentes del día
                     authRepository.getAsistenciasPorFecha(materiaId, fechaHoy)
                         .onSuccess { asistenciasResponse ->
-                            // HAY asistencias guardadas - cargarlas
                             val asistenciasMap = asistenciasResponse.asistencias.associateBy { it.alumno_id }
 
                             alumnosConAsistencia = response.alumnos.map { alumno ->
@@ -94,14 +89,13 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                                     "Ausente" -> AttendanceStatus.ABSENT
                                     "Retardo" -> AttendanceStatus.LATE
                                     "Justificado" -> AttendanceStatus.PERMISSION
-                                    else -> AttendanceStatus.PRESENT // Por defecto
+                                    else -> AttendanceStatus.PRESENT
                                 }
                                 AlumnoConAsistencia(alumno, estado)
                             }
                             isLoading = false
                         }
                         .onFailure {
-                            // NO hay asistencias guardadas - empezar en blanco (todos presentes)
                             alumnosConAsistencia = response.alumnos.map { alumno ->
                                 AlumnoConAsistencia(alumno, AttendanceStatus.PRESENT)
                             }
@@ -169,7 +163,6 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
                         claseInfo = claseInfo,
                         fecha = fechaHoy,
                         onSave = {
-                            // Guardar asistencias (igual que antes)
                             scope.launch {
                                 isSaving = true
                                 val asistencias = alumnosConAsistencia.map { alumnoConAsistencia ->
@@ -186,7 +179,6 @@ fun AttendanceScreen(navController: NavController, materiaId: Int = 0) {
 
                                 authRepository.guardarAsistencias(materiaId, fechaHoy, asistencias)
                                     .onSuccess {
-                                        // Mostrar mensaje de éxito y volver
                                         navController.popBackStack()
                                     }
                                     .onFailure { exception ->
