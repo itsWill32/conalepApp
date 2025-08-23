@@ -33,7 +33,6 @@ import com.example.conalepApp.repository.AuthRepository
 import com.example.conalepApp.ui.theme.conalepGreen
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-// En tu NotificationsScreen.kt actual, reemplaza todo con esto:
 
 @Composable
 fun NotificationsScreen(navController: NavController) {
@@ -42,7 +41,6 @@ fun NotificationsScreen(navController: NavController) {
     var userType by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Obtener tipo de usuario
     LaunchedEffect(Unit) {
         authRepository.userData.collect { user ->
             userType = user?.userType
@@ -62,7 +60,6 @@ fun NotificationsScreen(navController: NavController) {
             "maestro" -> TeacherNotificationsScreen(navController)
             "alumno" -> StudentNotificationsScreen(navController)
             else -> {
-                // Error o tipo de usuario no válido
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
