@@ -42,7 +42,6 @@ fun AppNavigation() {
             AttendanceHistoryScreen(navController, materiaId)
         }
 
-        // NUEVA RUTA: Editar asistencia de fecha específica
         composable("attendance_edit/{materiaId}/{fecha}") { backStackEntry ->
             val materiaId = backStackEntry.arguments?.getString("materiaId")?.toIntOrNull() ?: 0
             val fecha = backStackEntry.arguments?.getString("fecha") ?: ""
@@ -52,7 +51,6 @@ fun AppNavigation() {
             TeacherNotificationsScreen(navController)
         }
 
-        // Para maestros - crear nueva notificación
         composable("create_notification") {
             CreateNotificationScreen(navController)
         }
