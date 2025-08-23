@@ -44,7 +44,6 @@ fun AttendanceHistoryScreen(navController: NavController, materiaId: Int = 0) {
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Cargar historial de asistencias
     LaunchedEffect(materiaId) {
         if (materiaId <= 0) {
             errorMessage = "ID de materia inválido"
