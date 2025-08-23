@@ -53,10 +53,8 @@ fun AttendanceEditScreen(
     var isSaving by remember { mutableStateOf(false) }
     var hasChanges by remember { mutableStateOf(false) }
 
-    // Estado inicial para detectar cambios
     var estadosIniciales by remember { mutableStateOf<Map<Int, AttendanceStatus>>(emptyMap()) }
 
-    // Cargar asistencias de la fecha específica
     LaunchedEffect(materiaId, fecha) {
         if (materiaId <= 0 || fecha.isEmpty()) {
             errorMessage = "Parámetros inválidos (ID: $materiaId, Fecha: $fecha)"
@@ -65,15 +63,12 @@ fun AttendanceEditScreen(
         }
 
         scope.launch {
-            // Primero obtener alumnos de la materia
             authRepository.getAlumnosParaAsistencia(materiaId)
                 .onSuccess { response ->
                     claseInfo = response.clase
 
-                    // Luego cargar asistencias existentes de la fecha específica
                     authRepository.getAsistenciasPorFecha(materiaId, fecha)
                         .onSuccess { asistenciasResponse ->
-                            // HAY asistencias guardadas - cargarlas
                             val asistenciasMap = asistenciasResponse.asistencias.associateBy { it.alumno_id }
 
                             alumnosConAsistencia = response.alumnos.map { alumno ->
@@ -88,7 +83,6 @@ fun AttendanceEditScreen(
                                 AlumnoConAsistenciaEdit(alumno, estado)
                             }
 
-                            // Guardar estados iniciales para detectar cambios
                             estadosIniciales = alumnosConAsistencia.associate {
                                 it.alumno.alumno_id to it.estado
                             }
@@ -107,7 +101,6 @@ fun AttendanceEditScreen(
         }
     }
 
-    // Detectar cambios
     LaunchedEffect(alumnosConAsistencia) {
         if (estadosIniciales.isNotEmpty()) {
             hasChanges = alumnosConAsistencia.any { alumno ->
@@ -129,8 +122,6 @@ fun AttendanceEditScreen(
                 navigationIcon = {
                     IconButton(onClick = {
                         if (hasChanges) {
-                            // Mostrar diálogo de confirmación si hay cambios
-                            // Por ahora, simplemente navegar hacia atrás
                         }
                         navController.popBackStack()
                     }) {
@@ -220,12 +211,10 @@ fun AttendanceEditScreen(
 
                                 authRepository.guardarAsistencias(materiaId, fecha, asistencias)
                                     .onSuccess {
-                                        // Actualizar estados iniciales
                                         estadosIniciales = alumnosConAsistencia.associate {
                                             it.alumno.alumno_id to it.estado
                                         }
                                         hasChanges = false
-                                        // Volver al historial
                                         navController.popBackStack()
                                     }
                                     .onFailure { exception ->
@@ -245,7 +234,6 @@ fun AttendanceEditScreen(
                     AttendanceSummaryEdit(roster = alumnosConAsistencia)
                 }
 
-                // Mostrar indicador de cambios
                 if (hasChanges) {
                     item {
                         Card(
