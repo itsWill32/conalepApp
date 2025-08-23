@@ -67,14 +67,11 @@ fun SubjectsScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Obtener usuario actual y sus materias
     LaunchedEffect(Unit) {
         authRepository.userData.collect { user ->
             currentUser = user
             if (user != null) {
-                // Obtener materias según el rol
                 scope.launch {
-                    // Cambiar la parte dentro de scope.launch por:
                     try {
                         if (user.isMaestro) {
                             authRepository.getMateriasMaestro()
@@ -149,7 +146,6 @@ fun SubjectsScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header del profesor (solo si es maestro)
             if (currentUser?.isMaestro == true) {
                 item { ProfessorHeader(teacher = DummyData.teacher) }
                 item {
@@ -181,7 +177,6 @@ fun SubjectsScreen(navController: NavController) {
                     )
                 }
             } else {
-                // Mostrar materias según el rol
                 when {
                     currentUser?.isMaestro == true -> {
                         items(materiasMaestro) { materia ->
@@ -285,9 +280,7 @@ fun SubjectCardAlumno(materia: MateriaAlumno) {
 }
 
 
-// Al final del archivo, después de todas las funciones @Composable
 private suspend fun getMateriasMaestroFromAPI(): List<MateriaMaestro> {
-    // Por ahora devolvemos datos dummy, luego conectamos con la API
     return listOf(
         MateriaMaestro(1, "Matemáticas", "MAT101", 28),
         MateriaMaestro(2, "Programación", "PRO101", 25)
@@ -295,7 +288,6 @@ private suspend fun getMateriasMaestroFromAPI(): List<MateriaMaestro> {
 }
 
 private suspend fun getMateriasAlumnoFromAPI(): List<MateriaAlumno> {
-    // Por ahora devolvemos datos dummy, luego conectamos con la API
     return listOf(
         MateriaAlumno(1, "Física", "FIS301", "Carlos", "Ruiz", "Hernández", "2025-01-15"),
         MateriaAlumno(2, "Base de Datos", "BD201", "María Elena", "García", "López", "2025-01-15")
