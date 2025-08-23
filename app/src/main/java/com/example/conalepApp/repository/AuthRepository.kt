@@ -26,7 +26,6 @@ import com.example.conalepApp.api.NotificacionItem
 import com.example.conalepApp.api.NotificacionDestinatarios
 
 
-// Extensión para DataStore
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
 class AuthRepository(private val context: Context) {
@@ -47,12 +46,10 @@ class AuthRepository(private val context: Context) {
         private val USER_TELEFONO_KEY = stringPreferencesKey("user_telefono")
     }
 
-    // Obtener token guardado
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
     }
 
-    // Obtener datos del usuario guardado
     val userData: Flow<User?> = context.dataStore.data.map { preferences ->
         val id = preferences[USER_ID_KEY]?.toIntOrNull()
         val nombre = preferences[USER_NOMBRE_KEY]
@@ -82,7 +79,6 @@ class AuthRepository(private val context: Context) {
         } else null
     }
 
-    // Login con email
     suspend fun login(email: String): Result<User> {
         return try {
             val response = apiService.login(LoginRequest(email))
@@ -91,7 +87,6 @@ class AuthRepository(private val context: Context) {
                 val loginResponse = response.body()!!
 
                 if (loginResponse.success) {
-                    // Guardar token y datos del usuario
                     saveAuthData(loginResponse.token, loginResponse.user)
                     Result.success(loginResponse.user)
                 } else {
@@ -105,7 +100,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    // Obtener perfil del usuario
     suspend fun getProfile(): Result<User> {
         return try {
             val token = getStoredToken()
@@ -131,7 +125,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    // Logout
     suspend fun logout(): Result<Boolean> {
         return try {
             val token = getStoredToken()
@@ -139,17 +132,14 @@ class AuthRepository(private val context: Context) {
                 apiService.logout("Bearer $token")
             }
 
-            // Limpiar datos locales
             clearAuthData()
             Result.success(true)
         } catch (e: Exception) {
-            // Aún si falla la llamada al servidor, limpiamos datos locales
             clearAuthData()
             Result.success(true)
         }
     }
 
-    // Verificar conectividad con el servidor
     suspend fun healthCheck(): Result<Boolean> {
         return try {
             val response = apiService.healthCheck()
@@ -159,7 +149,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    // Funciones privadas para manejo de datos
     private suspend fun saveAuthData(token: String, user: User) {
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token
@@ -181,7 +170,6 @@ class AuthRepository(private val context: Context) {
         return !token.isNullOrEmpty()
     }
 
-    // Método para obtener el usuario actual desde el almacenamiento local
     suspend fun getCurrentUser(): User? {
         return userData.first()
     }
@@ -341,7 +329,6 @@ class AuthRepository(private val context: Context) {
     }
 
 
-    // Para Maestros - Obtener destinatarios disponibles
     suspend fun getDestinatariosParaNotificacion(): Result<NotificacionDestinatarios> {
         return try {
             val token = getStoredToken()
@@ -366,7 +353,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    // Para Maestros - Crear notificación
     suspend fun crearNotificacion(
         titulo: String,
         mensaje: String,
@@ -397,7 +383,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    // Para Maestros - Ver mis notificaciones
     suspend fun getMisNotificaciones(status: String? = null): Result<List<NotificacionItem>> {
         return try {
             val token = getStoredToken()
@@ -422,7 +407,6 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    // Para Alumnos - Ver mis notificaciones
     suspend fun getMisNotificacionesAlumno(): Result<List<NotificacionItem>> {
         return try {
             val token = getStoredToken()
