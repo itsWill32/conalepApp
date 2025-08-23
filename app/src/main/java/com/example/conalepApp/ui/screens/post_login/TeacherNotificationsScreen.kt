@@ -45,7 +45,6 @@ fun TeacherNotificationsScreen(navController: NavController) {
         3 to "Rechazada"
     )
 
-    // Cargar notificaciones
     fun cargarNotificaciones(status: String? = null) {
         scope.launch {
             isLoading = true
@@ -63,12 +62,10 @@ fun TeacherNotificationsScreen(navController: NavController) {
         }
     }
 
-    // Cargar al inicio
     LaunchedEffect(Unit) {
         cargarNotificaciones()
     }
 
-    // Cargar cuando cambie el tab
     LaunchedEffect(selectedTab) {
         cargarNotificaciones(statusMap[selectedTab])
     }
@@ -108,7 +105,6 @@ fun TeacherNotificationsScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Tabs para filtrar
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.Transparent,
