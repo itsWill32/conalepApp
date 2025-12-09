@@ -168,7 +168,6 @@ fun StudentNotificationsScreen(navController: NavController) {
                     groupedNotifications.forEach { (date, notifications) ->
                         stickyHeader {
                             StudentNotificationGroupHeader(date = date)
-
                         }
                         items(notifications) { notification ->
                             StudentNotificationCard(notification = notification)
@@ -235,14 +234,6 @@ fun StudentNotificationGroupHeader(date: String) {
             fontWeight = FontWeight.Bold,
             color = conalepGreen
         )
-        // Nota: Funcionalidad de "Marcar como leído" se puede implementar después
-        // TextButton(onClick = { /* TODO */ }) {
-        //     Text(
-        //         "Marcar como leído",
-        //         fontWeight = FontWeight.Bold,
-        //         color = conalepGreen
-        //     )
-        // }
     }
 }
 
@@ -257,6 +248,7 @@ fun StudentNotificationCard(notification: NotificacionItem) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Icono de notificación
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -280,42 +272,49 @@ fun StudentNotificationCard(notification: NotificacionItem) {
                     color = conalepGreen,
                     style = MaterialTheme.typography.titleSmall
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     notification.mensaje,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Black,
                     fontWeight = FontWeight.Normal
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Mostrar tipo de notificación
                 Text(
                     getTipoNotificacionText(notification.tipo_destinatario),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray,
                     fontWeight = FontWeight.Medium
                 )
+
+                // ELIMINAR O COMENTAR ESTA LÍNEA:
+                // if (!notification.enviado_por.isNullOrEmpty()) {
+                //     Text(
+                //         "De: ${notification.enviado_por}",
+                //         style = MaterialTheme.typography.bodySmall,
+                //         color = Color.Gray,
+                //         fontStyle = FontStyle.Italic
+                //     )
+                // }
+
+                // SI QUIERES MOSTRAR QUIÉN ENVIÓ, USA ESTO:
+                notification.creado_por_tipo?.let { tipo ->
+                    Text(
+                        "Enviado por: ${tipo.replaceFirstChar { it.uppercase() }}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(horizontalAlignment = Alignment.End) {
-                // Indicador de nueva notificación (opcional)
-                // if (!notification.isRead) {
-                //     Box(
-                //         modifier = Modifier
-                //             .size(8.dp)
-                //             .clip(CircleShape)
-                //             .background(Color(0xFF4CAF50))
-                //     )
-                // }
-                // Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
-                    formatearTiempoRelativo(notification.fecha_creacion ?: "Sin fecha"),
+                    formatearTiempoRelativo(notification.fecha_creacion ?: ""),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
                     color = conalepGreen
@@ -325,8 +324,9 @@ fun StudentNotificationCard(notification: NotificacionItem) {
     }
 }
 
+
 private fun formatearFechaParaGrupo(fechaCreacion: String): String {
-    if (fechaCreacion.isNullOrBlank()) {
+    if (fechaCreacion.isBlank() || fechaCreacion == "Sin fecha") {
         return "Sin fecha"
     }
     return try {
@@ -360,7 +360,7 @@ private fun formatearFechaParaGrupo(fechaCreacion: String): String {
 }
 
 private fun formatearTiempoRelativo(fechaCreacion: String): String {
-    if (fechaCreacion.isNullOrBlank()) {
+    if (fechaCreacion.isBlank() || fechaCreacion == "Sin fecha") {
         return "Sin fecha"
     }
     return try {

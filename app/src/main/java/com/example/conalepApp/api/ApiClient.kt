@@ -8,7 +8,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val BASE_URL = "http://34.206.19.104:5000/"
+    // CAMBIA ESTA URL POR TU SERVIDOR
+    private const val BASE_URL = "https://conalep.chiapadecorzo.com.mx/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
