@@ -79,21 +79,18 @@ fun AboutUsScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 DeveloperCard(
-                    name = "Adrián Espinoza Enríquez",
-                    role = "Desarrollador de Software",
-                    imageRes = R.drawable.perfil_alberto
+                    name = "Adrián Espinoza Enríquez \n ",
+                    role = "Desarrollador de Backend",
                 )
                 DeveloperCard(
                     name = "William de Jesús Espinosa García",
                     role = "Desarrollador Movil",
-                    imageRes = R.drawable.perfil_alberto
                 )
             }
 
             DeveloperCard(
                 name = "José Alberto Carrasco Sánchez",
                 role = "Diseñador UX/UI",
-                imageRes = R.drawable.perfil_alberto
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -115,7 +112,7 @@ fun AboutUsScreen(navController: NavController) {
 }
 
 @Composable
-fun DeveloperCard(name: String, role: String, imageRes: Int) {
+fun DeveloperCard(name: String, role: String) {
     Card(
         modifier = Modifier.width(160.dp),
         shape = RoundedCornerShape(16.dp),
@@ -127,13 +124,7 @@ fun DeveloperCard(name: String, role: String, imageRes: Int) {
                 .fillMaxWidth()
                 .padding(vertical = 24.dp, horizontal = 8.dp)
         ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = "Foto de $name",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-            )
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 role,
