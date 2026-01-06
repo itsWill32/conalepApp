@@ -10,9 +10,11 @@ import com.example.conalepApp.ui.screens.pre_login.*
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
     NavHost(navController = navController, startDestination = "splash") {
+
+        //   PRE-LOGIN
         composable("splash") { SplashScreen(navController) }
-        composable("profile") { ProfileScreen(navController) }
         composable("landing") { LandingScreen(navController) }
         composable("school_info") { SchoolInfoScreen(navController) }
         composable("careers_list") { CareersListScreen(navController) }
@@ -25,15 +27,20 @@ fun AppNavigation() {
         composable("about_us") { AboutUsScreen(navController) }
         composable("about_school") { AboutSchoolScreen(navController) }
 
+        // POST-LOGIN
         composable("dashboard") { DashboardScreen(navController) }
+
         composable("profile") { ProfileScreen(navController) }
+
         composable("notifications") { NotificationsScreen(navController) }
         composable("subjects") { SubjectsScreen(navController) }
 
+        // Rutas de Asistencia
         composable("attendance/{materiaId}") { backStackEntry ->
             val materiaId = backStackEntry.arguments?.getString("materiaId")?.toIntOrNull() ?: 0
             AttendanceScreen(navController, materiaId)
         }
+        // Ruta alternativa por si se llama sin argumentos (fallback)
         composable("attendance") {
             AttendanceScreen(navController, 0)
         }
@@ -48,6 +55,8 @@ fun AppNavigation() {
             val fecha = backStackEntry.arguments?.getString("fecha") ?: ""
             AttendanceEditScreen(navController, materiaId, fecha)
         }
+
+        // Rutas de Maestros
         composable("teacher_notifications") {
             TeacherNotificationsScreen(navController)
         }
@@ -56,5 +65,4 @@ fun AppNavigation() {
             CreateNotificationScreen(navController)
         }
     }
-
 }
