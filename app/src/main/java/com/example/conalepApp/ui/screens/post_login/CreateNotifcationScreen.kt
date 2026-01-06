@@ -120,7 +120,7 @@ fun CreateNotificationScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -138,7 +138,7 @@ fun CreateNotificationScreen(navController: NavController) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = conalepGreen)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Cargando opciones...")
+                    Text("Cargando opciones...", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         } else {
@@ -149,15 +149,14 @@ fun CreateNotificationScreen(navController: NavController) {
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Mensajes de error/éxito
                 if (errorMessage.isNotEmpty()) {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             errorMessage,
-                            color = Color.Red,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(16.dp),
                             textAlign = TextAlign.Center
                         )
@@ -167,12 +166,12 @@ fun CreateNotificationScreen(navController: NavController) {
 
                 if (successMessage.isNotEmpty()) {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             successMessage,
-                            color = Color(0xFF2E7D32),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(16.dp),
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Medium
@@ -188,7 +187,9 @@ fun CreateNotificationScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = conalepGreen,
-                        focusedLabelColor = conalepGreen
+                        focusedLabelColor = conalepGreen,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
@@ -203,7 +204,9 @@ fun CreateNotificationScreen(navController: NavController) {
                     maxLines = 5,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = conalepGreen,
-                        focusedLabelColor = conalepGreen
+                        focusedLabelColor = conalepGreen,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
 
@@ -244,7 +247,8 @@ fun CreateNotificationScreen(navController: NavController) {
                         )
                         Text(
                             text = texto,
-                            modifier = Modifier.padding(start = 8.dp)
+                            modifier = Modifier.padding(start = 8.dp),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -289,25 +293,25 @@ fun CreateNotificationScreen(navController: NavController) {
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Enviando...")
+                        Text("Enviando...", color = Color.White)
                     } else {
-                        Icon(Icons.Default.Send, contentDescription = null)
+                        Icon(Icons.Default.Send, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Enviar Notificación")
+                        Text("Enviar Notificación", color = Color.White)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FF)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         "ℹ️ Las notificaciones deben ser aprobadas por un administrador antes de ser enviadas a los alumnos.",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF1976D2)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -335,10 +339,11 @@ fun SeleccionMateriaUnica(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(materias) { materia ->
+            val isSelected = selectedMateria == materia.clase_id
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = if (selectedMateria == materia.clase_id)
-                        Color(0xFFE8F5E8) else Color(0xFFF8F9FA)
+                    containerColor = if (isSelected)
+                        MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -349,7 +354,7 @@ fun SeleccionMateriaUnica(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
-                        selected = selectedMateria == materia.clase_id,
+                        selected = isSelected,
                         onClick = { onMateriaSelected(materia.clase_id) },
                         colors = RadioButtonDefaults.colors(selectedColor = conalepGreen)
                     )
@@ -357,12 +362,13 @@ fun SeleccionMateriaUnica(
                     Column {
                         Text(
                             materia.nombre_clase,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             "${materia.codigo_clase} • ${materia.total_alumnos} alumnos",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -391,10 +397,11 @@ fun SeleccionMultiplesMaterias(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(materias) { materia ->
+            val isSelected = selectedMaterias.contains(materia.clase_id)
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = if (selectedMaterias.contains(materia.clase_id))
-                        Color(0xFFE8F5E8) else Color(0xFFF8F9FA)
+                    containerColor = if (isSelected)
+                        MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -405,7 +412,7 @@ fun SeleccionMultiplesMaterias(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = selectedMaterias.contains(materia.clase_id),
+                        checked = isSelected,
                         onCheckedChange = { checked ->
                             val newSet = if (checked) {
                                 selectedMaterias + materia.clase_id
@@ -420,12 +427,13 @@ fun SeleccionMultiplesMaterias(
                     Column {
                         Text(
                             materia.nombre_clase,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             "${materia.codigo_clase} • ${materia.total_alumnos} alumnos",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -465,11 +473,8 @@ fun SeleccionAlumnosConFiltros(
                 alumno.nombreCompleto.contains(searchQuery, ignoreCase = true) ||
                         alumno.matricula.contains(searchQuery, ignoreCase = true)
             }
-
             val cumpleGrado = gradoFiltro == "Todos" || alumno.grado == gradoFiltro
-
             val cumpleGrupo = grupoFiltro == "Todos" || alumno.grupo == grupoFiltro
-
             cumpleTexto && cumpleGrado && cumpleGrupo
         }
     }
@@ -507,7 +512,9 @@ fun SeleccionAlumnosConFiltros(
         },
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = conalepGreen,
-            focusedLabelColor = conalepGreen
+            focusedLabelColor = conalepGreen,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         )
     )
 
@@ -527,7 +534,7 @@ fun SeleccionAlumnosConFiltros(
 
     if (showFilters) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
@@ -539,7 +546,8 @@ fun SeleccionAlumnosConFiltros(
                         Text(
                             "Grado:",
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         var expandedGrado by remember { mutableStateOf(false) }
@@ -561,7 +569,8 @@ fun SeleccionAlumnosConFiltros(
                                     .menuAnchor()
                                     .fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = conalepGreen
+                                    focusedBorderColor = conalepGreen,
+                                    focusedTextColor = MaterialTheme.colorScheme.onSurface
                                 )
                             )
 
@@ -589,7 +598,8 @@ fun SeleccionAlumnosConFiltros(
                         Text(
                             "Grupo:",
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         var expandedGrupo by remember { mutableStateOf(false) }
@@ -611,7 +621,8 @@ fun SeleccionAlumnosConFiltros(
                                     .menuAnchor()
                                     .fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = conalepGreen
+                                    focusedBorderColor = conalepGreen,
+                                    focusedTextColor = MaterialTheme.colorScheme.onSurface
                                 )
                             )
 
@@ -643,7 +654,7 @@ fun SeleccionAlumnosConFiltros(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
                 ) {
-                    Text("Limpiar filtros", fontSize = 12.sp)
+                    Text("Limpiar filtros", fontSize = 12.sp, color = Color.White)
                 }
             }
         }
@@ -658,7 +669,7 @@ fun SeleccionAlumnosConFiltros(
         Text(
             "Mostrando ${filteredAlumnos.size} de ${alumnos.size} alumnos",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         if (selectedAlumnos.isNotEmpty()) {
@@ -686,7 +697,7 @@ fun SeleccionAlumnosConFiltros(
             colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
             contentPadding = PaddingValues(8.dp)
         ) {
-            Text("Seleccionar filtrados", fontSize = 12.sp)
+            Text("Seleccionar filtrados", fontSize = 12.sp, color = Color.White)
         }
 
         Button(
@@ -699,7 +710,7 @@ fun SeleccionAlumnosConFiltros(
             colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
             contentPadding = PaddingValues(8.dp)
         ) {
-            Text("Deseleccionar filtrados", fontSize = 12.sp)
+            Text("Deseleccionar filtrados", fontSize = 12.sp, color = Color.White)
         }
     }
 
@@ -712,23 +723,24 @@ fun SeleccionAlumnosConFiltros(
         if (filteredAlumnos.isEmpty()) {
             item {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         "No se encontraron alumnos con los filtros aplicados",
                         modifier = Modifier.padding(16.dp),
                         textAlign = TextAlign.Center,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         } else {
             items(filteredAlumnos) { alumno ->
+                val isSelected = selectedAlumnos.contains(alumno.alumno_id)
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = if (selectedAlumnos.contains(alumno.alumno_id))
-                            Color(0xFFE8F5E8) else Color(0xFFF8F9FA)
+                        containerColor = if (isSelected)
+                            MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -739,7 +751,7 @@ fun SeleccionAlumnosConFiltros(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = selectedAlumnos.contains(alumno.alumno_id),
+                            checked = isSelected,
                             onCheckedChange = { checked ->
                                 val newSet = if (checked) {
                                     selectedAlumnos + alumno.alumno_id
@@ -754,7 +766,8 @@ fun SeleccionAlumnosConFiltros(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 alumno.nombreCompleto,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -769,7 +782,7 @@ fun SeleccionAlumnosConFiltros(
                                 Text(
                                     "${alumno.grado}º${alumno.grupo}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             if (alumno.materias_compartidas.isNotEmpty()) {

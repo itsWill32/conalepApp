@@ -17,21 +17,29 @@ private val DarkColorScheme = darkColorScheme(
     secondary = conalepDarkGreen,
     background = Color(0xFF121212),
     surface = Color(0xFF1E1E1E),
+
+    surfaceVariant = Color(0xFF2C2C2C),
+
     onPrimary = Color.White,
     onSecondary = Color.White,
     onBackground = Color.White,
     onSurface = Color.White,
+    onSurfaceVariant = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = conalepGreen,
     secondary = conalepDarkGreen,
     background = Color.White,
-    surface = conalepLightGray,
+    surface = Color.White,
+
+    surfaceVariant = conalepLightGray,
+
     onPrimary = Color.White,
     onSecondary = Color.White,
     onBackground = conalepText,
     onSurface = conalepText,
+    onSurfaceVariant = conalepText
 )
 
 @Composable

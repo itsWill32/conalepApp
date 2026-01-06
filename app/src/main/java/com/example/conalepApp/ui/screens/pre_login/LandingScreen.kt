@@ -34,9 +34,7 @@ import com.example.conalepApp.ui.theme.conalepFooter
 import com.example.conalepApp.ui.theme.conalepGreen
 import kotlinx.coroutines.launch
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.launch
 import com.example.conalepApp.repository.AuthRepository
 import com.example.conalepApp.api.User
 
@@ -54,19 +52,24 @@ fun LandingScreen(navController: NavController) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     ModalDrawerSheet(
                         modifier = Modifier.fillMaxWidth(0.40f),
-                        drawerContainerColor = Color.White
+                        drawerContainerColor = MaterialTheme.colorScheme.surface
                     ) {
                         Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                             Text(
                                 "Menú",
                                 style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.align(Alignment.CenterStart)
+                                modifier = Modifier.align(Alignment.CenterStart),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             IconButton(
                                 onClick = { scope.launch { drawerState.close() } },
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = "Cerrar Menú")
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Cerrar Menú",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
                         DrawerMenuItem(text = "Nuestro plantel") {
@@ -109,16 +112,20 @@ fun LandingScreen(navController: NavController) {
                                         modifier = Modifier.height(35.dp),
                                         contentPadding = PaddingValues(horizontal = 16.dp)
                                     ) {
-                                        Text("Inicia sesión", fontWeight = FontWeight.Bold)
+                                        Text("Inicia sesión", fontWeight = FontWeight.Bold, color = Color.White)
                                     }
                                     IconButton(onClick = {
                                         scope.launch { drawerState.apply { if (isClosed) open() else close() } }
                                     }) {
-                                        Icon(Icons.Filled.Menu, contentDescription = "Menú")
+                                        Icon(
+                                            Icons.Filled.Menu,
+                                            contentDescription = "Menú",
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
                                     }
                                 }
                             },
-                            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
                         )
                     }
                 ) { innerPadding ->
@@ -145,8 +152,6 @@ fun LandingScreen(navController: NavController) {
             onDismiss = { showLoginDialog = false },
             onLogin = { user ->
                 showLoginDialog = false
-                // Aquí podríamos guardar los datos del usuario si es necesario
-                println("Usuario logueado: ${user.fullName} (${user.userType})")
                 navController.navigate("dashboard") {
                     popUpTo("landing") { inclusive = true }
                 }
@@ -161,12 +166,14 @@ fun DrawerMenuItem(text: String, onClick: () -> Unit) {
         text = text,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp)
     )
 }
+
 @Composable
 fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
     val context = LocalContext.current
@@ -180,11 +187,11 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                    Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = MaterialTheme.colorScheme.onSurface)
                 }
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -201,7 +208,8 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
                     Text(
                         "Correo electrónico",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -214,15 +222,20 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFFD9D9D9),
-                            focusedContainerColor = Color(0xFFD9D9D9),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+
                             unfocusedBorderColor = Color.Transparent,
                             focusedBorderColor = conalepGreen,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
+
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         placeholder = {
-                            Text("test@conalep.edu.mx", color = Color.Gray)
+                            Text("test@conalep.edu.mx")
                         },
                         enabled = !isLoading
                     )
@@ -231,7 +244,7 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             errorMessage,
-                            color = Color.Red,
+                            color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -244,10 +257,8 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
                                 errorMessage = "Por favor ingresa tu email"
                                 return@Button
                             }
-
                             isLoading = true
                             errorMessage = ""
-
                             scope.launch {
                                 authRepository.login(emailText)
                                     .onSuccess { user ->
@@ -275,6 +286,7 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
                             Text(
                                 "Ingresar",
                                 fontWeight = FontWeight.Normal,
+                                color = Color.White,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
@@ -284,6 +296,7 @@ fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
         }
     }
 }
+
 @Composable
 fun HeaderSection() {
     Column(
@@ -312,7 +325,8 @@ fun HeaderSection() {
             Text(
                 text = "El Colegio Nacional de Educación Profesional Técnica es una Institución líder en la formación de Profesionales Técnicos y Profesionales Técnicos Bachiller en México, que cursan programas reconocidos por su calidad.",
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(16.dp))
             Image(
@@ -365,12 +379,18 @@ fun FamilySection() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(16.dp)
     ) {
-        Icon(Icons.Filled.Groups, contentDescription = "Familia", modifier = Modifier.size(40.dp))
+        Icon(
+            Icons.Filled.Groups,
+            contentDescription = "Familia",
+            modifier = Modifier.size(40.dp),
+            tint = MaterialTheme.colorScheme.onBackground
+        )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "Estamos listos para recibirte en la familia conalep",
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(
@@ -378,7 +398,7 @@ fun FamilySection() {
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
         ) {
-            Text("Ver más", fontWeight = FontWeight.Bold)
+            Text("Ver más", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
@@ -391,8 +411,8 @@ fun EducationOfferSection(navController: NavController) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Oferta educativa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Conoce cual de nuestras carreras es para ti", fontWeight = FontWeight.Bold)
+        Text("Oferta educativa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Text("Conoce cual de nuestras carreras es para ti", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(16.dp))
 
         val careers = DummyData.careers
@@ -465,9 +485,9 @@ fun StatsBannerSection() {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            StatItem(icon = { Icon(Icons.Filled.Warehouse, contentDescription = null) }, number = "32", text = "Entidades\nfederativas")
-            StatItem(icon = { Icon(Icons.Filled.School, contentDescription = null) }, number = "5", text = "Carreras")
-            StatItem(icon = { Icon(Icons.Filled.Warehouse, contentDescription = null) }, number = "313", text = "Planteles en\noperación")
+            StatItem(icon = { Icon(Icons.Filled.Warehouse, contentDescription = null, tint = Color.White) }, number = "32", text = "Entidades\nfederativas")
+            StatItem(icon = { Icon(Icons.Filled.School, contentDescription = null, tint = Color.White) }, number = "5", text = "Carreras")
+            StatItem(icon = { Icon(Icons.Filled.Warehouse, contentDescription = null, tint = Color.White) }, number = "313", text = "Planteles en\noperación")
         }
     }
 }
@@ -482,7 +502,6 @@ fun StatItem(icon: @Composable () -> Unit, number: String, text: String) {
         }
     }
 }
-
 
 @Composable
 fun FooterSection() {

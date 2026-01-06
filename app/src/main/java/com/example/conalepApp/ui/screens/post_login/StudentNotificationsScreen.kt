@@ -81,7 +81,7 @@ fun StudentNotificationsScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 actions = {
@@ -109,7 +109,7 @@ fun StudentNotificationsScreen(navController: NavController) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(color = conalepGreen)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Cargando notificaciones...")
+                        Text("Cargando notificaciones...", color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -123,7 +123,7 @@ fun StudentNotificationsScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -131,14 +131,14 @@ fun StudentNotificationsScreen(navController: NavController) {
                         ) {
                             Text(
                                 "Error",
-                                color = Color.Red,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 errorMessage,
-                                color = Color.Red,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 textAlign = TextAlign.Center
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -146,7 +146,7 @@ fun StudentNotificationsScreen(navController: NavController) {
                                 onClick = { cargarNotificaciones() },
                                 colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
                             ) {
-                                Text("Reintentar")
+                                Text("Reintentar", color = Color.White)
                             }
                         }
                     }
@@ -168,7 +168,6 @@ fun StudentNotificationsScreen(navController: NavController) {
                     groupedNotifications.forEach { (date, notifications) ->
                         stickyHeader {
                             StudentNotificationGroupHeader(date = date)
-
                         }
                         items(notifications) { notification ->
                             StudentNotificationCard(notification = notification)
@@ -190,7 +189,7 @@ fun EmptyNotificationsView() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(32.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA))
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(
                 modifier = Modifier.padding(32.dp),
@@ -205,14 +204,15 @@ fun EmptyNotificationsView() {
                     "No tienes notificaciones",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     "Cuando tus profesores envíen notificaciones, aparecerán aquí",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -235,14 +235,6 @@ fun StudentNotificationGroupHeader(date: String) {
             fontWeight = FontWeight.Bold,
             color = conalepGreen
         )
-        // Nota: Funcionalidad de "Marcar como leído" se puede implementar después
-        // TextButton(onClick = { /* TODO */ }) {
-        //     Text(
-        //         "Marcar como leído",
-        //         fontWeight = FontWeight.Bold,
-        //         color = conalepGreen
-        //     )
-        // }
     }
 }
 
@@ -286,7 +278,7 @@ fun StudentNotificationCard(notification: NotificacionItem) {
                 Text(
                     notification.mensaje,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Normal
                 )
 
@@ -295,7 +287,7 @@ fun StudentNotificationCard(notification: NotificacionItem) {
                 Text(
                     getTipoNotificacionText(notification.tipo_destinatario),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -303,17 +295,6 @@ fun StudentNotificationCard(notification: NotificacionItem) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(horizontalAlignment = Alignment.End) {
-                // Indicador de nueva notificación (opcional)
-                // if (!notification.isRead) {
-                //     Box(
-                //         modifier = Modifier
-                //             .size(8.dp)
-                //             .clip(CircleShape)
-                //             .background(Color(0xFF4CAF50))
-                //     )
-                // }
-                // Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
                     formatearTiempoRelativo(notification.fecha_creacion ?: "Sin fecha"),
                     style = MaterialTheme.typography.bodySmall,
@@ -324,6 +305,7 @@ fun StudentNotificationCard(notification: NotificacionItem) {
         }
     }
 }
+
 
 private fun formatearFechaParaGrupo(fechaCreacion: String): String {
     if (fechaCreacion.isNullOrBlank()) {

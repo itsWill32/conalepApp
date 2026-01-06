@@ -208,7 +208,7 @@ fun SubjectsScreen(navController: NavController) {
 fun SubjectCardMaestro(materia: MateriaMaestro, navController: NavController) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -252,7 +252,7 @@ fun SubjectCardMaestro(materia: MateriaMaestro, navController: NavController) {
 fun SubjectCardAlumno(materia: MateriaAlumno) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),

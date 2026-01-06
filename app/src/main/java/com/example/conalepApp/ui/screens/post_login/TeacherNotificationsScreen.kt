@@ -198,7 +198,7 @@ fun TeacherNotificationsScreen(navController: NavController) {
 fun EmptyNotificationsCard(onCreateClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
             modifier = Modifier.padding(32.dp),
@@ -239,7 +239,7 @@ fun EmptyNotificationsCard(onCreateClick: () -> Unit) {
 fun TeacherNotificationCard(notificacion: NotificacionItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(

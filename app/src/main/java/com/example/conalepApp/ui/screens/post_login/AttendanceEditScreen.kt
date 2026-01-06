@@ -125,7 +125,11 @@ fun AttendanceEditScreen(
                         }
                         navController.popBackStack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -160,7 +164,7 @@ fun AttendanceEditScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -168,14 +172,14 @@ fun AttendanceEditScreen(
                         ) {
                             Text(
                                 "Error",
-                                color = Color.Red,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 errorMessage,
-                                color = Color.Red,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                                 textAlign = TextAlign.Center
                             )
                             Spacer(modifier = Modifier.height(16.dp))
@@ -183,7 +187,7 @@ fun AttendanceEditScreen(
                                 onClick = { navController.popBackStack() },
                                 colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
                             ) {
-                                Text("Volver al historial")
+                                Text("Volver al historial", color = Color.White)
                             }
                         }
                     }
@@ -238,7 +242,8 @@ fun AttendanceEditScreen(
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -253,7 +258,7 @@ fun AttendanceEditScreen(
                                     "Tienes cambios sin guardar",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF8B5000)
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
                                 )
                             }
                         }
@@ -297,7 +302,7 @@ fun AttendanceEditHeaderReal(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -323,7 +328,8 @@ fun AttendanceEditHeaderReal(
                 Text(
                     formatearFechaEdit(fecha),
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Light
+                    fontWeight = FontWeight.Light,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SmallIconButtonEdit(
@@ -374,10 +380,10 @@ fun SmallIconButtonEdit(
                 strokeWidth = 2.dp
             )
         } else {
-            Icon(icon, contentDescription = text, modifier = Modifier.size(14.dp))
+            Icon(icon, contentDescription = text, modifier = Modifier.size(14.dp), tint = Color.White)
         }
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text, fontSize = 12.sp, fontWeight = FontWeight.Light)
+        Text(text, fontSize = 12.sp, fontWeight = FontWeight.Light, color = Color.White)
     }
 }
 
@@ -404,7 +410,7 @@ fun StudentAttendanceRowEdit(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -414,7 +420,8 @@ fun StudentAttendanceRowEdit(
                 text = "${alumnoConAsistencia.alumno.matricula} - ${alumnoConAsistencia.alumno.nombreCompleto}",
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Row {

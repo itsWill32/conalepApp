@@ -160,7 +160,7 @@ private fun LoadingProfileContent(innerPadding: PaddingValues) {
             Text(
                 "Cargando perfil...",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -180,7 +180,7 @@ private fun ErrorProfileContent(
         contentAlignment = Alignment.Center
     ) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -191,14 +191,14 @@ private fun ErrorProfileContent(
                     "Error al cargar el perfil",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     errorMessage,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -206,7 +206,7 @@ private fun ErrorProfileContent(
                     onClick = onRetry,
                     colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
                 ) {
-                    Text("Reintentar")
+                    Text("Reintentar", color = Color.White)
                 }
             }
         }
@@ -243,7 +243,8 @@ fun ConfigurationCard(onLogout: () -> Unit) {
             Text(
                 "Configuración",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -271,7 +272,7 @@ fun ConfigurationCard(onLogout: () -> Unit) {
                     Text(
                         "Salir de la aplicación",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -289,9 +290,9 @@ fun ProfileHeader(user: User) {
             Image(
                 painter = painterResource(
                     id = when {
-                        user.isMaestro -> R.drawable.ic_profile_person 
-                        user.isAlumno -> R.drawable.ic_profile_person 
-                        else -> R.drawable.ic_profile_person 
+                        user.isMaestro -> R.drawable.ic_profile_person
+                        user.isAlumno -> R.drawable.ic_profile_person
+                        else -> R.drawable.ic_profile_person
                     }
                 ),
                 contentDescription = "Foto de perfil",
@@ -315,7 +316,8 @@ fun ProfileHeader(user: User) {
                         else -> user.userType.replaceFirstChar { it.uppercase() }
                     },
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Light
+                    fontWeight = FontWeight.Light,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -324,12 +326,14 @@ fun ProfileHeader(user: User) {
             Text(
                 user.nombre,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 "${user.apellido_paterno} ${user.apellido_materno}",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -353,7 +357,8 @@ fun PersonalInfoCard(user: User) {
                 Text(
                     "Información personal",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 TextButton(
                     onClick = {
@@ -385,7 +390,6 @@ fun PersonalInfoCard(user: User) {
                 onValueChange = {}
             )
 
-            // Información específica para alumnos
             if (user.isAlumno) {
                 user.matricula?.let { matricula ->
                     InfoRow(
@@ -444,7 +448,8 @@ fun InfoRow(
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (isEditing && label == "Teléfono") {
@@ -455,7 +460,8 @@ fun InfoRow(
                     singleLine = true,
                     placeholder = { Text("Ingresa tu teléfono") },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = conalepGreen
+                        focusedBorderColor = conalepGreen,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             } else {
@@ -463,7 +469,7 @@ fun InfoRow(
                     if (value.isBlank()) "No especificado" else value,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Normal,
-                    color = if (value.isBlank()) Color.Gray else Color.Unspecified
+                    color = if (value.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                 )
             }
         }

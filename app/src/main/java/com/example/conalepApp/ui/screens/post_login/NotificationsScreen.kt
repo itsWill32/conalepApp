@@ -66,7 +66,7 @@ fun NotificationsScreen(navController: NavController) {
                 ) {
                     Text(
                         "Error: Tipo de usuario no válido",
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -136,7 +136,7 @@ fun NotificationItemCard(notification: NotificationItem) {
                 Text(
                     notification.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Normal
                 )
             }

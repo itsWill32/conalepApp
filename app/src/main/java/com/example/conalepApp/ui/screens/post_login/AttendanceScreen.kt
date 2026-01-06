@@ -293,7 +293,7 @@ fun AttendanceSummary(roster: List<StudentAttendance>) {
 fun SummaryCard(modifier: Modifier = Modifier, count: Int, label: String, color: Color) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
             modifier = Modifier
@@ -369,7 +369,7 @@ fun StatusIconButton(status: AttendanceStatus, isSelected: Boolean, onClick: () 
         AttendanceStatus.LATE -> Triple(R.drawable.ic_delay, "Retardo", Color(0xFFD07F1B))
     }
 
-    val iconColor = if (isSelected) Color.White else Color.Black
+    val iconColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
     val textColor = if (isSelected) color else Color.Transparent
     val textHeight = 16.dp
 
@@ -423,7 +423,7 @@ fun AttendanceHeaderReal(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -523,7 +523,7 @@ fun StudentAttendanceRowReal(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
