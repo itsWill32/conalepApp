@@ -8,7 +8,8 @@ data class CareerDetails(
     val description: String,
     val profile: String,
     val imageRes1: Int,
-    val imageRes2: Int
+    val imageRes2: Int,
+    val planEstudiosUrl: String
 )
 
 data class User(
@@ -85,38 +86,43 @@ object DummyData {
     val careerDetailsMap = mapOf(
         careers[0] to CareerDetails(
             fullName = "Profesional técnico bachiller en Informatica",
-            description = "Es la persona que se prepara para participar activa y competitivamente en el mercado productivo, desarrollando competencias profesionales básicas que le permiten procesar y comunicar información...",
-            profile = "Desempeñar funciones técnico operativas inherentes al desarrollo e implantación de soluciones de tecnologías de información basados en la automatización...",
-            imageRes1 = R.drawable.informatica_details1,
-            imageRes2 = R.drawable.informatica_details2
+            description = "Es la persona que se prepara para participar activa y competitivamente en el mercado productivo, desarrollando competencias profesionales básicas que le permiten procesar y comunicar información, utilizando herramientas avanzadas para la elaboración de documentos digitales; implementar proyectos de software para la automatización de procesos de la organización; dar mantenimiento a software y/o tecnologías de información y comunicación, y administrar áreas de tecnologías de información y comunicación.",
+            profile = "Desempeñar funciones técnico operativas inherentes al desarrollo e implantación de soluciones de tecnologías de información basados en la automatización, organización, codificación, recuperación de la información y optimización de recursos informáticos a fin de impulsar la competitividad, las buenas prácticas y toma de decisiones en organizaciones o empresas de cualquier ámbito.",
+            imageRes1 = R.drawable.informatica_details1_1,
+            imageRes2 = R.drawable.informatica_details2,
+            planEstudiosUrl = "https://conalep.chiapas.gob.mx/ptb_informatica.html"
         ),
         careers[1] to CareerDetails(
             fullName = "Profesional técnico bachiller en Autotrónica",
-            description = "Descripción de ejemplo para Autotrónica...",
-            profile = "Perfil de egreso de ejemplo para Autotrónica...",
-            imageRes1 = R.drawable.informatica_details1,
-            imageRes2 = R.drawable.informatica_details2
+            description = "Es la persona que se prepara para participar activa y competitivamente en el mercado productivo, desarrollando competencias profesionales básicas que le permiten mantener los sistemas eléctricos, electrónicos y de inyección de vehículos automotrices; realizar el servicio a unidades de control electrónicas, empleando dispositivos de escaneo y diagnóstico; realizar el servicio a sensores y actuadores y diagnosticar fallas en vehículos y sistemas automotrices.",
+            profile = "Realizar el mantenimiento de sistemas automotrices mecánicos, hidráulicos y eléctricos, controlados principalmente por medios electrónicos, aplicando normas técnicas vigentes, especificaciones y manuales de fabricantes, para lograr el óptimo funcionamiento del vehículo automotriz a gasolina, a diesel e híbrido, así como la satisfacción del cliente.",
+            imageRes1 = R.drawable.autotronica_details1,
+            imageRes2 = R.drawable.carrera_autotronica,
+            planEstudiosUrl = "https://conalep.chiapas.gob.mx/ptb_autotronica.html"
         ),
         careers[2] to CareerDetails(
             fullName = "Profesional técnico bachiller en Hospitalidad Turística",
-            description = "Descripción de ejemplo para Hospitalidad Turística...",
-            profile = "Perfil de egreso de ejemplo para Hospitalidad Turística...",
-            imageRes1 = R.drawable.informatica_details1,
-            imageRes2 = R.drawable.informatica_details2
+            description = "Es la persona que se prepara para participar activa y competitivamente en el mercado productivo, desarrollando competencias profesionales básicas que le permiten brindar atención al huésped/cliente en su arribo, estancia y partida, empleando la logística administrativa establecida por la empresa de alojamiento; así como vender servicios y productos turísticos, empleando procedimientos mercadotécnicos definidos por la empresa.",
+            profile = "Realizar actividades de servicio, atención y promoción en la industria de la hospitalidad turística, apegándose a las políticas, técnicas y procesos de trabajo, a fin de satisfacer las necesidades y requerimientos del turista.",
+            imageRes1 = R.drawable.hospitalidad_details1,
+            imageRes2 = R.drawable.carrera_turismo,
+            planEstudiosUrl = "https://conalep.chiapas.gob.mx/ptb_hosptur.html"
         ),
         careers[3] to CareerDetails(
             fullName = "Profesional técnico bachiller en Construcción",
-            description = "Descripción de ejemplo para Construcción...",
-            profile = "Perfil de egreso de ejemplo para Construcción...",
-            imageRes1 = R.drawable.informatica_details1,
-            imageRes2 = R.drawable.informatica_details2
+            description = "Es la persona que se prepara para participar activa y competitivamente en el mercado productivo, desarrollando competencias profesionales básicas que le permiten realizar levantamientos y trazos topográficos; dibujar e interpretar planos de acuerdo con las especificaciones de diseño de la obra; así como supervisar y controlar las obras de acuerdo con las especificaciones del proyecto y los procedimientos constructivos.",
+            profile = "Formar Profesionales Técnicos y Profesionales Técnicos-Bachiller competentes para desempeñarse en el nivel de mandos medios en actividades de supervisión y control durante la construcción y restauración de obras civiles privadas y públicas aplicando las técnicas constructivas y de control con el fin de cumplir con las especificaciones del proyecto y las necesidades de los clientes.",
+            imageRes1 = R.drawable.construccion_details1,
+            imageRes2 = R.drawable.carrera_construccion,
+            planEstudiosUrl = "https://conalep.chiapas.gob.mx/ptb_construccion.html"
         ),
         careers[4] to CareerDetails(
             fullName = "Profesional técnico bachiller en Mantenimiento Automotriz",
-            description = "Descripción de ejemplo para Mantenimiento Automotriz...",
-            profile = "Perfil de egreso de ejemplo para Mantenimiento Automotriz...",
-            imageRes1 = R.drawable.informatica_details1,
-            imageRes2 = R.drawable.informatica_details2
+            description = "Es la persona que se prepara para participar activa y competitivamente en el mercado productivo, desarrollando competencias profesionales básicas que le permiten identificar las características técnicas de maquinaria, equipo y componentes de vehículos y sistemas automotrices; realizar servicios de lubricación, afinación, carburación, puesta a punto y verificación de emisiones de gases contaminantes de vehículos automotrices a gasolina; programar el mantenimiento de vehículos automotrices ycomercializar servicios de mantenimiento.",
+            profile = "Realizar el mantenimiento de sistemas automotrices mecánicos, hidráulicos, eléctricos y electrónicos, aplicando normas técnicas vigentes, especificaciones y manuales de fabricantes, para lograr el óptimo funcionamiento del vehículo automotriz a gasolina o a diesel y la satisfacción del cliente.",
+            imageRes1 = R.drawable.automotriz_details1,
+            imageRes2 = R.drawable.carrera_automotriz,
+            planEstudiosUrl = "https://conalep.chiapas.gob.mx/ptb_mttoautomotriz.html"
         )
     )
 

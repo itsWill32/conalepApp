@@ -29,7 +29,6 @@ import com.example.conalepApp.ui.theme.conalepGreen
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceHistoryScreen(navController: NavController, materiaId: Int = 0) {
@@ -169,7 +168,7 @@ fun AttendanceHistoryScreen(navController: NavController, materiaId: Int = 0) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             Text(
                                 "No hay historial de asistencias para esta materia",
@@ -202,7 +201,7 @@ fun HistorialItemCardReal(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD9D9D9))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(

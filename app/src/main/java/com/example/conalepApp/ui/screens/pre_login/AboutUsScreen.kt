@@ -39,7 +39,11 @@ fun AboutUsScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -58,7 +62,7 @@ fun AboutUsScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                "Sobre nuestra aplicacion",
+                "Sobre nuestra aplicación",
                 color = conalepGreen,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
@@ -69,7 +73,8 @@ fun AboutUsScreen(navController: NavController) {
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Light,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -79,21 +84,18 @@ fun AboutUsScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 DeveloperCard(
-                    name = "Adrián Espinoza Enríquez",
-                    role = "Desarrollador de Software",
-                    imageRes = R.drawable.perfil_alberto
+                    name = "Adrián Espinoza Enríquez \n ",
+                    role = "Desarrollador de Backend",
                 )
                 DeveloperCard(
                     name = "William de Jesús Espinosa García",
                     role = "Desarrollador Movil",
-                    imageRes = R.drawable.perfil_alberto
                 )
             }
 
             DeveloperCard(
                 name = "José Alberto Carrasco Sánchez",
                 role = "Diseñador UX/UI",
-                imageRes = R.drawable.perfil_alberto
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -106,7 +108,7 @@ fun AboutUsScreen(navController: NavController) {
             )
             Text(
                 "José Alonso Macías Montoya",
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
             )
@@ -115,11 +117,11 @@ fun AboutUsScreen(navController: NavController) {
 }
 
 @Composable
-fun DeveloperCard(name: String, role: String, imageRes: Int) {
+fun DeveloperCard(name: String, role: String) {
     Card(
         modifier = Modifier.width(160.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -127,25 +129,21 @@ fun DeveloperCard(name: String, role: String, imageRes: Int) {
                 .fillMaxWidth()
                 .padding(vertical = 24.dp, horizontal = 8.dp)
         ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = "Foto de $name",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-            )
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 role,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Light,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 name,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,9 +33,10 @@ import com.example.conalepApp.data.DummyData
 import com.example.conalepApp.ui.theme.conalepFooter
 import com.example.conalepApp.ui.theme.conalepGreen
 import kotlinx.coroutines.launch
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.LocalContext
 import com.example.conalepApp.repository.AuthRepository
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
+import com.example.conalepApp.api.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,19 +52,24 @@ fun LandingScreen(navController: NavController) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     ModalDrawerSheet(
                         modifier = Modifier.fillMaxWidth(0.40f),
-                        drawerContainerColor = Color.White
+                        drawerContainerColor = MaterialTheme.colorScheme.surface
                     ) {
                         Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                             Text(
                                 "Menú",
                                 style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.align(Alignment.CenterStart)
+                                modifier = Modifier.align(Alignment.CenterStart),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             IconButton(
                                 onClick = { scope.launch { drawerState.close() } },
                                 modifier = Modifier.align(Alignment.CenterEnd)
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = "Cerrar Menú")
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Cerrar Menú",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
                         DrawerMenuItem(text = "Nuestro plantel") {
@@ -107,20 +112,20 @@ fun LandingScreen(navController: NavController) {
                                         modifier = Modifier.height(35.dp),
                                         contentPadding = PaddingValues(horizontal = 16.dp)
                                     ) {
-                                        Text("Inicia sesión", fontWeight = FontWeight.Bold)
+                                        Text("Inicia sesión", fontWeight = FontWeight.Bold, color = Color.White)
                                     }
                                     IconButton(onClick = {
-                                        scope.launch {
-                                            drawerState.apply {
-                                                if (isClosed) open() else close()
-                                            }
-                                        }
+                                        scope.launch { drawerState.apply { if (isClosed) open() else close() } }
                                     }) {
-                                        Icon(Icons.Filled.Menu, contentDescription = "Menú")
+                                        Icon(
+                                            Icons.Filled.Menu,
+                                            contentDescription = "Menú",
+                                            tint = MaterialTheme.colorScheme.onSurface
+                                        )
                                     }
                                 }
                             },
-                            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
                         )
                     }
                 ) { innerPadding ->
@@ -137,16 +142,21 @@ fun LandingScreen(navController: NavController) {
                         item { StatsBannerSection() }
                         item { FooterSection() }
                     }
-
-                    if (showLoginDialog) {
-                        LoginDialog(
-                            navController = navController,
-                            onDismiss = { showLoginDialog = false }
-                        )
-                    }
                 }
             }
         }
+    }
+
+    if (showLoginDialog) {
+        LoginDialog(
+            onDismiss = { showLoginDialog = false },
+            onLogin = { user ->
+                showLoginDialog = false
+                navController.navigate("dashboard") {
+                    popUpTo("landing") { inclusive = true }
+                }
+            }
+        )
     }
 }
 
@@ -156,6 +166,7 @@ fun DrawerMenuItem(text: String, onClick: () -> Unit) {
         text = text,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
@@ -164,10 +175,7 @@ fun DrawerMenuItem(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun LoginDialog(
-    navController: NavController,
-    onDismiss: () -> Unit
-) {
+fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
     val context = LocalContext.current
     val authRepository = remember { AuthRepository(context) }
     val scope = rememberCoroutineScope()
@@ -179,105 +187,109 @@ fun LoginDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                    Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = MaterialTheme.colorScheme.onSurface)
                 }
-            }
-
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    "Inicia sesión",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = conalepGreen
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    "Correo electrónico",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Normal
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = emailText,
-                    onValueChange = {
-                        emailText = it
-                        errorMessage = ""
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFFD9D9D9),
-                        focusedContainerColor = Color(0xFFD9D9D9),
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = conalepGreen,
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
-                    ),
-                    placeholder = {
-                        Text("test@conalep.edu.mx", color = Color.Gray)
-                    },
-                    enabled = !isLoading
-                )
-
-                if (errorMessage.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        errorMessage,
-                        color = Color.Red,
-                        style = MaterialTheme.typography.bodySmall
+                        "Inicia sesión",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = conalepGreen
                     )
-                }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Correo electrónico",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    OutlinedTextField(
+                        value = emailText,
+                        onValueChange = {
+                            emailText = it
+                            errorMessage = ""
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
 
-                Button(
-                    onClick = {
-                        if (emailText.isBlank()) {
-                            errorMessage = "Por favor ingresa tu email"
-                            return@Button
-                        }
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = conalepGreen,
 
-                        isLoading = true
-                        errorMessage = ""
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
 
-                        scope.launch {
-                            authRepository.requestOTP(emailText).fold(
-                                onSuccess = {
-                                    navController.navigate("otp_verification/$emailText")
-                                    onDismiss()
-                                },
-                                onFailure = { exception ->
-                                    isLoading = false
-                                    errorMessage = exception.message ?: "Error de conexión"
-                                }
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        placeholder = {
+                            Text("test@conalep.edu.mx")
+                        },
+                        enabled = !isLoading
+                    )
+
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = {
+                            if (emailText.isBlank()) {
+                                errorMessage = "Por favor ingresa tu email"
+                                return@Button
+                            }
+                            isLoading = true
+                            errorMessage = ""
+                            scope.launch {
+                                authRepository.login(emailText)
+                                    .onSuccess { user ->
+                                        isLoading = false
+                                        onLogin(user)
+                                    }
+                                    .onFailure { exception ->
+                                        isLoading = false
+                                        errorMessage = exception.message ?: "Error de conexión"
+                                    }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                "Ingresar",
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White,
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text("Continuar", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -287,43 +299,74 @@ fun LoginDialog(
 
 @Composable
 fun HeaderSection() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.edificio_conalep),
-            contentDescription = "Edificio Conalep",
+            painter = painterResource(id = R.drawable.graduada_header),
+            contentDescription = "Header Background",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
-                    )
-                )
+                .fillMaxWidth()
+                .height(200.dp)
         )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            contentAlignment = Alignment.BottomStart
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column {
+            Text(
+                text = "Conectando talento con tecnología",
+                style = MaterialTheme.typography.headlineLarge,
+                color = conalepGreen,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "El Colegio Nacional de Educación Profesional Técnica es una Institución líder en la formación de Profesionales Técnicos y Profesionales Técnicos Bachiller en México, que cursan programas reconocidos por su calidad.",
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Image(
+                painter = painterResource(id = R.drawable.begin_logo),
+                contentDescription = "Logo",
+                modifier = Modifier.height(50.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ValuesSection(navController: NavController) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .padding(vertical = 16.dp, horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        onClick = { navController.navigate("about_school") }
+    ) {
+        Box {
+            Image(
+                painter = painterResource(id = R.drawable.valores_conalep),
+                contentDescription = "Valores Conalep",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = "CONALEP",
+                    "VALORES CONALEP",
                     color = Color.White,
-                    fontSize = 32.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Chiapa de Corzo",
-                    color = Color.White,
-                    fontSize = 24.sp
                 )
             }
         }
@@ -331,91 +374,31 @@ fun HeaderSection() {
 }
 
 @Composable
-fun ValuesSection(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Valores",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = conalepGreen
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            ValueCard(
-                icon = Icons.Default.School,
-                label = "Excelencia",
-                onClick = { navController.navigate("about_school") }
-            )
-            ValueCard(
-                icon = Icons.Default.Groups,
-                label = "Comunidad",
-                onClick = { navController.navigate("about_school") }
-            )
-            ValueCard(
-                icon = Icons.Default.Warehouse,
-                label = "Innovación",
-                onClick = { navController.navigate("about_school") }
-            )
-        }
-    }
-}
-
-@Composable
-fun ValueCard(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+fun FamilySection() {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.padding(16.dp)
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = conalepGreen,
-            modifier = Modifier.size(48.dp)
+            Icons.Filled.Groups,
+            contentDescription = "Familia",
+            modifier = Modifier.size(40.dp),
+            tint = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = label, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-fun FamilySection() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.alumnos),
-            contentDescription = "Alumnos Conalep",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+        Text(
+            "Estamos listos para recibirte en la familia conalep",
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { /*TODO*/ },
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
         ) {
-            Text(
-                text = "Somos una familia",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+            Text("Ver más", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
@@ -425,148 +408,121 @@ fun EducationOfferSection(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Oferta educativa",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = conalepGreen,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Text("Oferta educativa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Text("Conoce cual de nuestras carreras es para ti", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Spacer(modifier = Modifier.height(16.dp))
 
-        DummyData.careers.take(3).forEach { career ->
-            CareerCard(
-                careerName = career,
-                imageRes = when(career) {
-                    DummyData.careers[0] -> R.drawable.carrera_informatica
-                    DummyData.careers[1] -> R.drawable.carrera_autotronica
-                    else -> R.drawable.carrera_turismo
-                },
-                onClick = {
-                    val encodedCareerName = URLEncoder.encode(career, StandardCharsets.UTF_8.toString())
-                    navController.navigate("career_detail/$encodedCareerName")
-                }
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+        val careers = DummyData.careers
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            EducationCareerCard(modifier = Modifier.weight(1f), careerName = careers[0], imageRes = R.drawable.carrera_informatica, navController = navController)
+            EducationCareerCard(modifier = Modifier.weight(1f), careerName = careers[1], imageRes = R.drawable.carrera_autotronica, navController = navController)
         }
-
-        Button(
-            onClick = { navController.navigate("careers_list") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
-        ) {
-            Text("Ver todas las carreras")
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            EducationCareerCard(modifier = Modifier.weight(1f), careerName = careers[2], imageRes = R.drawable.carrera_turismo, navController = navController)
+            EducationCareerCard(modifier = Modifier.weight(1f), careerName = careers[3], imageRes = R.drawable.carrera_construccion, navController = navController)
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        EducationCareerCard(modifier = Modifier.fillMaxWidth(0.5f), careerName = careers[4], imageRes = R.drawable.carrera_automotriz, navController = navController)
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CareerCard(careerName: String, imageRes: Int, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
-            .clickable(onClick = onClick)
+fun EducationCareerCard(modifier: Modifier = Modifier, careerName: String, imageRes: Int, navController: NavController) {
+    Card(
+        modifier = modifier.height(100.dp),
+        shape = RoundedCornerShape(16.dp),
+        onClick = { navController.navigate("careers_list") }
     ) {
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = careerName,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black),
-                        startY = 300f
-                    )
-                )
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Text(
-                text = careerName,
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+        Box {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = careerName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                            startY = 50f
+                        )
+                    )
+                    .padding(8.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Text(
+                    careerName.replace("Profesional técnico en ", ""),
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
 
 @Composable
 fun StatsBannerSection() {
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(conalepGreen)
-            .padding(24.dp)
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = conalepGreen)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            StatItem(number = "1000+", label = "Estudiantes")
-            StatItem(number = "50+", label = "Docentes")
-            StatItem(number = "5", label = "Carreras")
+            StatItem(icon = { Icon(Icons.Filled.Warehouse, contentDescription = null, tint = Color.White) }, number = "32", text = "Entidades\nfederativas")
+            StatItem(icon = { Icon(Icons.Filled.School, contentDescription = null, tint = Color.White) }, number = "5", text = "Carreras")
+            StatItem(icon = { Icon(Icons.Filled.Warehouse, contentDescription = null, tint = Color.White) }, number = "313", text = "Planteles en\noperación")
         }
     }
 }
 
 @Composable
-fun StatItem(number: String, label: String) {
+fun StatItem(icon: @Composable () -> Unit, number: String, text: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = number,
-            color = Color.White,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = label,
-            color = Color.White,
-            fontSize = 14.sp
-        )
+        ProvideTextStyle(value = LocalTextStyle.current.copy(color = Color.White)) {
+            icon()
+            Text(number, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text(text, textAlign = TextAlign.Center, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
 @Composable
 fun FooterSection() {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(conalepFooter)
-            .padding(24.dp)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "CONALEP Chiapa de Corzo",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Plantel 022 | CCT: 07DPT0002C",
-                color = Color.White,
-                fontSize = 12.sp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "© 2024 Todos los derechos reservados",
-                color = Color.White.copy(alpha = 0.7f),
-                fontSize = 10.sp
-            )
+        Image(
+            painter = painterResource(id = R.drawable.footer_logo),
+            contentDescription = "Logo Footer",
+            modifier = Modifier.height(50.dp)
+        )
+        Column {
+            Text("Información en línea", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("> Organigrama", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Light)
+            Text("> Calendario escolar", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Light)
+            Text("> Comité de Ética", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Light)
         }
     }
 }

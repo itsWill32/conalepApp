@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -26,6 +27,8 @@ import java.nio.charset.StandardCharsets
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CareerDetailScreen(navController: NavController, careerName: String) {
+    val uriHandler = LocalUriHandler.current
+
     val decodedCareerName = remember(careerName) {
         URLDecoder.decode(careerName, StandardCharsets.UTF_8.toString())
     }
@@ -39,9 +42,16 @@ fun CareerDetailScreen(navController: NavController, careerName: String) {
                 title = { Text("Carrera técnica") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { innerPadding ->
@@ -54,8 +64,17 @@ fun CareerDetailScreen(navController: NavController, careerName: String) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (details != null) {
-                Text(details.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text(details.description, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    details.fullName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    details.description,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
                 Image(
                     painter = painterResource(id = details.imageRes1),
@@ -67,19 +86,29 @@ fun CareerDetailScreen(navController: NavController, careerName: String) {
                     contentScale = ContentScale.Crop
                 )
 
-                Text("Perfil de egreso", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(details.profile, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "Perfil de egreso",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    details.profile,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        TextButton(onClick = { /*TODO*/ }) {
+                        TextButton(
+                            onClick = {
+                                uriHandler.openUri(details.planEstudiosUrl)
+                            }
+                        ) {
                             Text("Plan de estudios", textDecoration = TextDecoration.Underline)
-                        }
-                        TextButton(onClick = { /*TODO*/ }) {
-                            Text("Perfil de egreso", textDecoration = TextDecoration.Underline)
                         }
                     }
                     Spacer(modifier = Modifier.width(16.dp))
@@ -94,7 +123,10 @@ fun CareerDetailScreen(navController: NavController, careerName: String) {
                     )
                 }
             } else {
-                Text("Detalles no encontrados para: $decodedCareerName")
+                Text(
+                    "Detalles no encontrados para: $decodedCareerName",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
