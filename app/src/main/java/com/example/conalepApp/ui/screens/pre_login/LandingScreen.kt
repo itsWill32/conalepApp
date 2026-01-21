@@ -56,19 +56,44 @@ fun LandingScreen(navController: NavController) {
             drawerContent = {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     ModalDrawerSheet(
-                        modifier = Modifier.fillMaxWidth(0.40f),
+                        modifier = Modifier.fillMaxWidth(0.75f),
                         drawerContainerColor = MaterialTheme.colorScheme.surface
                     ) {
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                            Text(
-                                "Menú",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.align(Alignment.CenterStart),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                        // Header del drawer
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            conalepGreen.copy(alpha = 0.1f),
+                                            Color.Transparent
+                                        )
+                                    )
+                                )
+                                .padding(20.dp)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.conalep_logo_green),
+                                    contentDescription = "Logo",
+                                    modifier = Modifier.height(40.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "CONALEP 022",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = conalepGreen
+                                )
+                            }
+
                             IconButton(
                                 onClick = { scope.launch { drawerState.close() } },
-                                modifier = Modifier.align(Alignment.CenterEnd)
+                                modifier = Modifier.align(Alignment.TopEnd)
                             ) {
                                 Icon(
                                     Icons.Default.Close,
@@ -77,6 +102,11 @@ fun LandingScreen(navController: NavController) {
                                 )
                             }
                         }
+
+                        HorizontalDivider()
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         DrawerMenuItem(text = "Nuestro plantel") {
                             navController.navigate("school_info")
                             scope.launch { drawerState.close() }
@@ -109,15 +139,27 @@ fun LandingScreen(navController: NavController) {
                                 )
                             },
                             actions = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Button(
                                         onClick = { showLoginDialog = true },
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = RoundedCornerShape(20.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
-                                        modifier = Modifier.height(35.dp),
-                                        contentPadding = PaddingValues(horizontal = 16.dp)
+                                        modifier = Modifier.height(40.dp),
+                                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                                        elevation = ButtonDefaults.buttonElevation(
+                                            defaultElevation = 2.dp,
+                                            pressedElevation = 4.dp
+                                        )
                                     ) {
-                                        Text("Inicia sesión", fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text(
+                                            "Inicia sesión",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontSize = 14.sp
+                                        )
                                     }
                                     IconButton(onClick = {
                                         scope.launch { drawerState.apply { if (isClosed) open() else close() } }
@@ -142,7 +184,7 @@ fun LandingScreen(navController: NavController) {
                     ) {
                         item { HeaderSection() }
                         item { ValuesSection(navController) }
-                        item { FamilySection() }
+                        item { FamilySection(navController) }
                         item { EducationOfferSection(navController) }
                         item { StatsBannerSection() }
                         item { FooterSection() }
@@ -162,13 +204,18 @@ fun LandingScreen(navController: NavController) {
                     errorMessage = ""
                 }
             },
-            title = { Text("Iniciar Sesión", fontWeight = FontWeight.Bold) },
+            title = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Iniciar Sesión", fontWeight = FontWeight.Bold, color = conalepGreen)
+                }
+            },
             text = {
                 Column {
                     Text(
                         "Ingresa tu correo institucional",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
@@ -182,10 +229,11 @@ fun LandingScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isLoading,
                         singleLine = true,
-                        isError = errorMessage.isNotEmpty()
+                        isError = errorMessage.isNotEmpty(),
+                        shape = RoundedCornerShape(12.dp)
                     )
                     if (errorMessage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             errorMessage,
                             color = MaterialTheme.colorScheme.error,
@@ -217,7 +265,8 @@ fun LandingScreen(navController: NavController) {
                         }
                     },
                     enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(if (isLoading) "Enviando..." else "Enviar código")
                 }
@@ -231,9 +280,10 @@ fun LandingScreen(navController: NavController) {
                     },
                     enabled = !isLoading
                 ) {
-                    Text("Cancelar")
+                    Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
+            },
+            shape = RoundedCornerShape(20.dp)
         )
     }
 
@@ -247,18 +297,24 @@ fun LandingScreen(navController: NavController) {
                     errorMessage = ""
                 }
             },
-            title = { Text("Verificar Código", fontWeight = FontWeight.Bold) },
+            title = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Verificar Código", fontWeight = FontWeight.Bold, color = conalepGreen)
+                }
+            },
             text = {
                 Column {
                     Text(
                         "Código enviado a:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                     Text(
                         email,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = conalepGreen
+                        color = conalepGreen,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
@@ -274,10 +330,11 @@ fun LandingScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isLoading,
                         singleLine = true,
-                        isError = errorMessage.isNotEmpty()
+                        isError = errorMessage.isNotEmpty(),
+                        shape = RoundedCornerShape(12.dp)
                     )
                     if (errorMessage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             errorMessage,
                             color = MaterialTheme.colorScheme.error,
@@ -313,7 +370,8 @@ fun LandingScreen(navController: NavController) {
                         }
                     },
                     enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(if (isLoading) "Verificando..." else "Verificar")
                 }
@@ -328,9 +386,10 @@ fun LandingScreen(navController: NavController) {
                     },
                     enabled = !isLoading
                 ) {
-                    Text("Volver")
+                    Text("Volver", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
+            },
+            shape = RoundedCornerShape(20.dp)
         )
     }
 }
@@ -339,13 +398,14 @@ fun LandingScreen(navController: NavController) {
 fun DrawerMenuItem(text: String, onClick: () -> Unit) {
     Text(
         text = text,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
+        textAlign = TextAlign.Start,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 16.dp)
+            .padding(horizontal = 24.dp, vertical = 16.dp)
     )
 }
 
@@ -364,7 +424,7 @@ fun HeaderSection() {
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             Text(
                 text = "Conectando talento con tecnología",
@@ -373,11 +433,13 @@ fun HeaderSection() {
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "El Colegio Nacional de Educación Profesional Técnica es una Institución líder en la formación de Profesionales Técnicos y Profesionales Técnicos Bachiller en México, que cursan programas reconocidos por su calidad.",
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -399,7 +461,8 @@ fun ValuesSection(navController: NavController) {
             .height(150.dp)
             .padding(vertical = 16.dp, horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        onClick = { navController.navigate("about_school") }
+        onClick = { navController.navigate("about_school") },
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box {
             Image(
@@ -426,35 +489,38 @@ fun ValuesSection(navController: NavController) {
 }
 
 @Composable
-fun FamilySection() {
+fun FamilySection(navController: NavController) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(20.dp)
     ) {
         Icon(
             Icons.Filled.Groups,
             contentDescription = "Familia",
-            modifier = Modifier.size(40.dp),
-            tint = MaterialTheme.colorScheme.onBackground
+            modifier = Modifier.size(48.dp),
+            tint = conalepGreen
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
-            "Estamos listos para recibirte en la familia conalep",
+            "Estamos listos para recibirte en la familia CONALEP",
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onBackground
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Button(
-            onClick = { /*TODO*/ },
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+            onClick = { navController.navigate("school_info") },
+            shape = RoundedCornerShape(20.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
         ) {
             Text("Ver más", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
 
+// Mantén EducationOfferSection, EducationCareerCard, StatsBannerSection, StatItem y FooterSection exactamente igual
 @Composable
 fun EducationOfferSection(navController: NavController) {
     Column(
@@ -488,7 +554,8 @@ fun EducationCareerCard(modifier: Modifier = Modifier, careerName: String, image
     Card(
         modifier = modifier.height(100.dp),
         shape = RoundedCornerShape(16.dp),
-        onClick = { navController.navigate("careers_list") }
+        onClick = { navController.navigate("careers_list") },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box {
             Image(
@@ -528,7 +595,8 @@ fun StatsBannerSection() {
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = conalepGreen)
+        colors = CardDefaults.cardColors(containerColor = conalepGreen),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
