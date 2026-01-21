@@ -26,24 +26,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.conalepApp.R
 import com.example.conalepApp.data.DummyData
 import com.example.conalepApp.ui.theme.conalepFooter
 import com.example.conalepApp.ui.theme.conalepGreen
 import kotlinx.coroutines.launch
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalContext
 import com.example.conalepApp.repository.AuthRepository
-import com.example.conalepApp.api.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(navController: NavController) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
     val scope = rememberCoroutineScope()
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showLoginDialog by remember { mutableStateOf(false) }
+    var showOTPDialog by remember { mutableStateOf(false) }
+    var email by remember { mutableStateOf("") }
+    var otpCode by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
@@ -147,13 +152,183 @@ fun LandingScreen(navController: NavController) {
         }
     }
 
+    // Diálogo 1: Ingreso de correo
     if (showLoginDialog) {
-        LoginDialog(
-            onDismiss = { showLoginDialog = false },
-            onLogin = { user ->
-                showLoginDialog = false
-                navController.navigate("dashboard") {
-                    popUpTo("landing") { inclusive = true }
+        AlertDialog(
+            onDismissRequest = {
+                if (!isLoading) {
+                    showLoginDialog = false
+                    email = ""
+                    errorMessage = ""
+                }
+            },
+            title = { Text("Iniciar Sesión", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(
+                        "Ingresa tu correo institucional",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            errorMessage = ""
+                        },
+                        label = { Text("Correo electrónico") },
+                        placeholder = { Text("test@conalep.edu.mx") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading,
+                        singleLine = true,
+                        isError = errorMessage.isNotEmpty()
+                    )
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (email.isBlank()) {
+                            errorMessage = "Ingresa tu correo"
+                            return@Button
+                        }
+                        isLoading = true
+                        errorMessage = ""
+                        scope.launch {
+                            authRepository.requestOTP(email)
+                                .onSuccess {
+                                    isLoading = false
+                                    showLoginDialog = false
+                                    showOTPDialog = true
+                                }
+                                .onFailure { exception ->
+                                    isLoading = false
+                                    errorMessage = exception.message ?: "Error al enviar código"
+                                }
+                        }
+                    },
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                ) {
+                    Text(if (isLoading) "Enviando..." else "Enviar código")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showLoginDialog = false
+                        email = ""
+                        errorMessage = ""
+                    },
+                    enabled = !isLoading
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Diálogo 2: Verificación de OTP
+    if (showOTPDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isLoading) {
+                    showOTPDialog = false
+                    otpCode = ""
+                    errorMessage = ""
+                }
+            },
+            title = { Text("Verificar Código", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(
+                        "Código enviado a:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        email,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = conalepGreen
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = otpCode,
+                        onValueChange = {
+                            if (it.length <= 6 && it.all { char -> char.isDigit() }) {
+                                otpCode = it
+                                errorMessage = ""
+                            }
+                        },
+                        label = { Text("Código OTP") },
+                        placeholder = { Text("123456") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading,
+                        singleLine = true,
+                        isError = errorMessage.isNotEmpty()
+                    )
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (otpCode.length != 6) {
+                            errorMessage = "El código debe tener 6 dígitos"
+                            return@Button
+                        }
+                        isLoading = true
+                        errorMessage = ""
+                        scope.launch {
+                            authRepository.verifyOTP(email, otpCode)
+                                .onSuccess { user ->
+                                    isLoading = false
+                                    showOTPDialog = false
+                                    email = ""
+                                    otpCode = ""
+                                    navController.navigate("dashboard") {
+                                        popUpTo("landing") { inclusive = true }
+                                    }
+                                }
+                                .onFailure { exception ->
+                                    isLoading = false
+                                    errorMessage = exception.message ?: "Código incorrecto"
+                                }
+                        }
+                    },
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                ) {
+                    Text(if (isLoading) "Verificando..." else "Verificar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showOTPDialog = false
+                        showLoginDialog = true
+                        otpCode = ""
+                        errorMessage = ""
+                    },
+                    enabled = !isLoading
+                ) {
+                    Text("Volver")
                 }
             }
         )
@@ -172,129 +347,6 @@ fun DrawerMenuItem(text: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp)
     )
-}
-
-@Composable
-fun LoginDialog(onDismiss: () -> Unit, onLogin: (User) -> Unit) {
-    val context = LocalContext.current
-    val authRepository = remember { AuthRepository(context) }
-    val scope = rememberCoroutineScope()
-
-    var emailText by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Box(contentAlignment = Alignment.TopEnd) {
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = MaterialTheme.colorScheme.onSurface)
-                }
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Inicia sesión",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = conalepGreen
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Correo electrónico",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = emailText,
-                        onValueChange = {
-                            emailText = it
-                            errorMessage = ""
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = conalepGreen,
-
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-
-                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        placeholder = {
-                            Text("test@conalep.edu.mx")
-                        },
-                        enabled = !isLoading
-                    )
-
-                    if (errorMessage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            errorMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = {
-                            if (emailText.isBlank()) {
-                                errorMessage = "Por favor ingresa tu email"
-                                return@Button
-                            }
-                            isLoading = true
-                            errorMessage = ""
-                            scope.launch {
-                                authRepository.login(emailText)
-                                    .onSuccess { user ->
-                                        isLoading = false
-                                        onLogin(user)
-                                    }
-                                    .onFailure { exception ->
-                                        isLoading = false
-                                        errorMessage = exception.message ?: "Error de conexión"
-                                    }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = conalepGreen),
-                        enabled = !isLoading
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                "Ingresar",
-                                fontWeight = FontWeight.Normal,
-                                color = Color.White,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable
