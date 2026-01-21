@@ -2,33 +2,37 @@ package com.example.conalepApp.api
 
 import retrofit2.Response
 import retrofit2.http.*
-import retrofit2.http.Path
-import retrofit2.http.Body
-import retrofit2.http.Query
+import okhttp3.ResponseBody
+import retrofit2.http.Streaming
 
 interface ApiService {
-    //auth
+    // ===== AUTENTICACIÓN =====
+    @POST("api/auth/mobile/request-code")
+    suspend fun requestOTP(@Body request: RequestOTPRequest): Response<OTPResponse>
+
+    @POST("api/auth/mobile/verify-code")
+    suspend fun verifyOTP(@Body request: VerifyOTPRequest): Response<LoginResponse>
+
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
-    @GET("api/auth/profile")
+    @GET("api/auth/mobile/profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ApiResponse<User>>
 
-    @POST("api/auth/logout")
+    @POST("api/auth/mobile/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<ApiResponse<Any>>
 
-    //verificar conexión
     @GET("api/health")
     suspend fun healthCheck(): Response<ApiResponse<Any>>
 
-    //Materias
+    // ===== MATERIAS =====
     @GET("api/materias/maestro")
     suspend fun getMateriasMaestro(@Header("Authorization") token: String): Response<ApiResponse<List<MateriaMaestroAPI>>>
 
     @GET("api/materias/alumno")
     suspend fun getMateriasAlumno(@Header("Authorization") token: String): Response<ApiResponse<List<MateriaAlumnoAPI>>>
 
-    //ASISTENCIAS
+    // ===== ASISTENCIAS =====
     @GET("api/asistencias/materia/{materiaId}/alumnos")
     suspend fun getAlumnosParaAsistencia(
         @Path("materiaId") materiaId: Int,
@@ -41,6 +45,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: GuardarAsistenciasRequest
     ): Response<ApiResponse<Any>>
+
     @GET("api/asistencias/materia/{materiaId}/fecha")
     suspend fun getAsistenciasPorFecha(
         @Path("materiaId") materiaId: Int,
@@ -54,9 +59,17 @@ interface ApiService {
         @Query("limite") limite: Int = 10,
         @Header("Authorization") token: String
     ): Response<ApiResponse<HistorialAsistenciasResponse>>
-    // Agregar estos endpoints a tu interface ApiService
 
-    // NOTIFICACIONES - Para Maestros
+    // ===== PDF =====
+    @Streaming  // ✅ AGREGADO
+    @GET("api/asistencias/materia/{materiaId}/pdf")
+    suspend fun descargarReportePDF(
+        @Path("materiaId") materiaId: Int,
+        @QueryMap params: Map<String, String>,
+        @Header("Authorization") token: String
+    ): Response<ResponseBody>
+
+    // ===== NOTIFICACIONES - Para Maestros =====
     @GET("api/notificaciones/maestro/destinatarios")
     suspend fun getDestinatariosParaNotificacion(
         @Header("Authorization") token: String
@@ -74,11 +87,9 @@ interface ApiService {
         @Query("status") status: String? = null
     ): Response<ApiResponse<List<NotificacionItem>>>
 
-    // NOTIFICACIONES - Para Alumnos
+    // ===== NOTIFICACIONES - Para Alumnos =====
     @GET("api/notificaciones/alumno/mis-notificaciones")
     suspend fun getMisNotificacionesAlumno(
         @Header("Authorization") token: String
     ): Response<ApiResponse<List<NotificacionItem>>>
-
 }
-

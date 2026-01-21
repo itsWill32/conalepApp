@@ -1,290 +1,236 @@
 package com.example.conalepApp.ui.screens.post_login
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.conalepApp.api.AlumnoAsistencia
+import com.example.conalepApp.api.AsistenciaExistente
 import com.example.conalepApp.api.AsistenciaItem
 import com.example.conalepApp.api.ClaseInfo
-import com.example.conalepApp.data.AttendanceStatus
 import com.example.conalepApp.repository.AuthRepository
-import com.example.conalepApp.ui.components.BottomNavigationBar
 import com.example.conalepApp.ui.theme.conalepGreen
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
-data class AlumnoConAsistenciaEdit(
-    val alumno: AlumnoAsistencia,
-    var estado: AttendanceStatus = AttendanceStatus.PRESENT
-)
+data class AlumnoEditEstado(
+    val alumnoId: Int,
+    val nombre: String,
+    val apellidoPaterno: String,
+    val apellidoMaterno: String,
+    val matricula: String,
+    var estado: String
+) {
+    val nombreCompleto: String
+        get() = "$nombre $apellidoPaterno $apellidoMaterno"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttendanceEditScreen(
-    navController: NavController,
-    materiaId: Int = 0,
-    fecha: String = ""
-) {
+fun AttendanceEditScreen(navController: NavController, materiaId: Int, fecha: String) {
     val context = LocalContext.current
     val authRepository = remember { AuthRepository(context) }
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var claseInfo by remember { mutableStateOf<ClaseInfo?>(null) }
-    var alumnosConAsistencia by remember { mutableStateOf<List<AlumnoConAsistenciaEdit>>(emptyList()) }
+    var alumnosEdit by remember { mutableStateOf<List<AlumnoEditEstado>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
-    var hasChanges by remember { mutableStateOf(false) }
-
-    var estadosIniciales by remember { mutableStateOf<Map<Int, AttendanceStatus>>(emptyMap()) }
+    var errorMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(materiaId, fecha) {
-        if (materiaId <= 0 || fecha.isEmpty()) {
-            errorMessage = "Parámetros inválidos (ID: $materiaId, Fecha: $fecha)"
+        if (materiaId == 0 || fecha.isEmpty()) {
+            errorMessage = "Parámetros inválidos"
             isLoading = false
             return@LaunchedEffect
         }
 
         scope.launch {
-            authRepository.getAlumnosParaAsistencia(materiaId)
-                .onSuccess { response ->
+            authRepository.getAsistenciasPorFecha(materiaId, fecha).fold(
+                onSuccess = { response ->
                     claseInfo = response.clase
-
-                    authRepository.getAsistenciasPorFecha(materiaId, fecha)
-                        .onSuccess { asistenciasResponse ->
-                            val asistenciasMap = asistenciasResponse.asistencias.associateBy { it.alumno_id }
-
-                            alumnosConAsistencia = response.alumnos.map { alumno ->
-                                val asistenciaExistente = asistenciasMap[alumno.alumno_id]
-                                val estado = when(asistenciaExistente?.estado_asistencia) {
-                                    "Presente" -> AttendanceStatus.PRESENT
-                                    "Ausente" -> AttendanceStatus.ABSENT
-                                    "Retardo" -> AttendanceStatus.LATE
-                                    "Justificado" -> AttendanceStatus.PERMISSION
-                                    else -> AttendanceStatus.PRESENT
-                                }
-                                AlumnoConAsistenciaEdit(alumno, estado)
-                            }
-
-                            estadosIniciales = alumnosConAsistencia.associate {
-                                it.alumno.alumno_id to it.estado
-                            }
-
-                            isLoading = false
-                        }
-                        .onFailure {
-                            errorMessage = "No se encontraron asistencias para esta fecha"
-                            isLoading = false
-                        }
+                    alumnosEdit = response.asistencias.map {
+                        AlumnoEditEstado(
+                            alumnoId = it.alumno_id,
+                            nombre = it.nombre,
+                            apellidoPaterno = it.apellido_paterno,
+                            apellidoMaterno = it.apellido_materno,
+                            matricula = it.matricula,
+                            estado = it.estado_asistencia
+                        )
+                    }
+                },
+                onFailure = {
+                    errorMessage = "Error al cargar asistencias"
                 }
-                .onFailure { exception ->
-                    errorMessage = exception.message ?: "Error al cargar datos"
-                    isLoading = false
-                }
-        }
-    }
-
-    LaunchedEffect(alumnosConAsistencia) {
-        if (estadosIniciales.isNotEmpty()) {
-            hasChanges = alumnosConAsistencia.any { alumno ->
-                estadosIniciales[alumno.alumno.alumno_id] != alumno.estado
-            }
+            )
+            isLoading = false
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Editar asistencia",
-                        color = conalepGreen,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
+            TopAppBar(
+                title = { Text("Editar Asistencia") },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (hasChanges) {
-                        }
-                        navController.popBackStack()
-                    }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Atrás",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = conalepGreen,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
-        },
-        bottomBar = { BottomNavigationBar(navController) }
-    ) { innerPadding ->
-        LazyColumn(
+        }
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+                .padding(padding)
+                .background(Color(0xFFF1F5F9))
         ) {
-            if (isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(color = conalepGreen)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Cargando asistencia...", color = conalepGreen)
+            when {
+                isLoading -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = conalepGreen)
+                }
+
+                errorMessage.isNotEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = errorMessage, color = Color.Red)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(onClick = { navController.popBackStack() }) {
+                            Text("Volver")
                         }
                     }
                 }
-            } else if (errorMessage.isNotEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+
+                else -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                "Error",
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                errorMessage,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { navController.popBackStack() },
-                                colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
-                            ) {
-                                Text("Volver al historial", color = Color.White)
-                            }
-                        }
-                    }
-                }
-            } else {
-                item {
-                    AttendanceEditHeaderReal(
-                        claseInfo = claseInfo,
-                        fecha = fecha,
-                        hasChanges = hasChanges,
-                        onSave = {
-                            scope.launch {
-                                isSaving = true
-                                val asistencias = alumnosConAsistencia.map { alumnoConAsistencia ->
-                                    AsistenciaItem(
-                                        alumno_id = alumnoConAsistencia.alumno.alumno_id,
-                                        estado = when(alumnoConAsistencia.estado) {
-                                            AttendanceStatus.PRESENT -> "Presente"
-                                            AttendanceStatus.ABSENT -> "Ausente"
-                                            AttendanceStatus.PERMISSION -> "Justificado"
-                                            AttendanceStatus.LATE -> "Retardo"
-                                        }
-                                    )
-                                }
-
-                                authRepository.guardarAsistencias(materiaId, fecha, asistencias)
-                                    .onSuccess {
-                                        estadosIniciales = alumnosConAsistencia.associate {
-                                            it.alumno.alumno_id to it.estado
-                                        }
-                                        hasChanges = false
-                                        navController.popBackStack()
-                                    }
-                                    .onFailure { exception ->
-                                        errorMessage = exception.message ?: "Error al guardar cambios"
-                                    }
-                                isSaving = false
-                            }
-                        },
-                        onHistory = { materiaId ->
-                            navController.navigate("attendance_history/$materiaId")
-                        },
-                        isSaving = isSaving
-                    )
-                }
-
-                item {
-                    AttendanceSummaryEdit(roster = alumnosConAsistencia)
-                }
-
-                if (hasChanges) {
-                    item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    "⚠️",
-                                    style = MaterialTheme.typography.titleMedium
+                                    text = claseInfo?.nombre_clase ?: "",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF0F172A)
+                                    )
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Tienes cambios sin guardar",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    text = "Código: ${claseInfo?.codigo_clase ?: ""}",
+                                    color = Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Fecha: $fecha",
+                                    color = Color(0xFF475569),
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val presentes = alumnosEdit.count { it.estado == "Presente" }
+                            val ausentes = alumnosEdit.count { it.estado == "Ausente" }
+                            val retardos = alumnosEdit.count { it.estado == "Retardo" }
+                            val justificados = alumnosEdit.count { it.estado == "Justificado" }
+
+                            EditStatChip("Presentes", presentes, Color(0xFF22C55E))
+                            EditStatChip("Ausentes", ausentes, Color(0xFFEF4444))
+                            EditStatChip("Retardos", retardos, Color(0xFFF59E0B))
+                            EditStatChip("Justificados", justificados, Color(0xFF3B82F6))
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(alumnosEdit) { item ->
+                                AlumnoEditItem(
+                                    alumno = item,
+                                    onEstadoChange = { nuevoEstado ->
+                                        alumnosEdit = alumnosEdit.map {
+                                            if (it.alumnoId == item.alumnoId) {
+                                                it.copy(estado = nuevoEstado)
+                                            } else {
+                                                it
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    isSaving = true
+                                    val asistencias = alumnosEdit.map {
+                                        AsistenciaItem(it.alumnoId, it.estado)
+                                    }
+
+                                    authRepository.guardarAsistencias(
+                                        materiaId = materiaId,
+                                        fecha = fecha,
+                                        asistencias = asistencias
+                                    ).fold(
+                                        onSuccess = {
+                                            snackbarHostState.showSnackbar("Asistencia actualizada")
+                                            navController.popBackStack()
+                                        },
+                                        onFailure = {
+                                            snackbarHostState.showSnackbar("Error al actualizar")
+                                        }
+                                    )
+                                    isSaving = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSaving,
+                            colors = ButtonDefaults.buttonColors(containerColor = conalepGreen)
+                        ) {
+                            Text(if (isSaving) "Guardando..." else "Actualizar asistencia")
                         }
                     }
-                }
-
-                item {
-                    Text(
-                        "Lista de estudiantes",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = conalepGreen
-                    )
-                }
-
-                items(alumnosConAsistencia, key = { it.alumno.alumno_id }) { alumnoConAsistencia ->
-                    StudentAttendanceRowEdit(
-                        alumnoConAsistencia = alumnoConAsistencia,
-                        onStatusChange = { newStatus ->
-                            alumnosConAsistencia = alumnosConAsistencia.map {
-                                if (it.alumno.alumno_id == alumnoConAsistencia.alumno.alumno_id) {
-                                    it.copy(estado = newStatus)
-                                } else it
-                            }
-                        }
-                    )
                 }
             }
         }
@@ -292,171 +238,136 @@ fun AttendanceEditScreen(
 }
 
 @Composable
-fun AttendanceEditHeaderReal(
-    claseInfo: ClaseInfo?,
-    fecha: String,
-    hasChanges: Boolean,
-    onSave: () -> Unit,
-    onHistory: (Int) -> Unit,
-    isSaving: Boolean
+private fun EditStatChip(label: String, count: Int, color: Color) {
+    Surface(
+        modifier = Modifier,
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall.copy(color = color)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlumnoEditItem(
+    alumno: AlumnoEditEstado,
+    onEstadoChange: (String) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Editando asistencia",
-                color = conalepGreen,
-                fontWeight = FontWeight.Bold
-            )
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(conalepGreen.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = alumno.nombre.firstOrNull()?.uppercase() ?: "",
+                        color = conalepGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-            if (claseInfo != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Chip(label = claseInfo.nombre_clase, isSelected = true, fontWeight = FontWeight.Light)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Chip(label = claseInfo.codigo_clase, fontWeight = FontWeight.Light)
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = alumno.nombreCompleto,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF0F172A)
+                    )
+                    Text(
+                        text = "Mat: ${alumno.matricula}",
+                        color = Color(0xFF64748B),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    formatearFechaEdit(fecha),
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Light,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EditAttendanceButton(
+                    label = "Presente",
+                    selected = alumno.estado == "Presente",
+                    color = Color(0xFF22C55E),
+                    onClick = { onEstadoChange("Presente") }
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SmallIconButtonEdit(
-                        text = if (isSaving) "Guardando..." else if (hasChanges) "Guardar cambios" else "Guardar",
-                        icon = Icons.Default.Description,
-                        onClick = onSave,
-                        enabled = !isSaving && hasChanges,
-                        highlighted = hasChanges
-                    )
-                    SmallIconButtonEdit(
-                        text = "Historial",
-                        icon = Icons.Default.History,
-                        onClick = {
-                            claseInfo?.let { onHistory(it.clase_id) }
-                        },
-                        enabled = !isSaving
-                    )
-                }
+                EditAttendanceButton(
+                    label = "Ausente",
+                    selected = alumno.estado == "Ausente",
+                    color = Color(0xFFEF4444),
+                    onClick = { onEstadoChange("Ausente") }
+                )
+                EditAttendanceButton(
+                    label = "Retardo",
+                    selected = alumno.estado == "Retardo",
+                    color = Color(0xFFF59E0B),
+                    onClick = { onEstadoChange("Retardo") }
+                )
+                EditAttendanceButton(
+                    label = "Justificado",
+                    selected = alumno.estado == "Justificado",
+                    color = Color(0xFF3B82F6),
+                    onClick = { onEstadoChange("Justificado") }
+                )
             }
         }
     }
 }
 
 @Composable
-fun SmallIconButtonEdit(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    highlighted: Boolean = false
+private fun RowScope.EditAttendanceButton(
+    label: String,
+    selected: Boolean,
+    color: Color,
+    onClick: () -> Unit
 ) {
-    val backgroundColor = if (highlighted) Color(0xFFFF6B35) else conalepGreen
-
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor,
-            disabledContainerColor = Color.Gray
-        ),
-        enabled = enabled
+    Surface(
+        modifier = Modifier
+            .weight(1f)
+            .clickable { onClick() },
+        color = if (selected) color else color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        if (!enabled && text.contains("Guardando")) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(14.dp),
-                color = Color.White,
-                strokeWidth = 2.dp
-            )
-        } else {
-            Icon(icon, contentDescription = text, modifier = Modifier.size(14.dp), tint = Color.White)
-        }
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(text, fontSize = 12.sp, fontWeight = FontWeight.Light, color = Color.White)
-    }
-}
-
-@Composable
-fun AttendanceSummaryEdit(roster: List<AlumnoConAsistenciaEdit>) {
-    val lateColor = Color(0xFFD07F1B)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        val presentCount = roster.count { it.estado == AttendanceStatus.PRESENT }
-        val absentCount = roster.count { it.estado == AttendanceStatus.ABSENT }
-        val permissionCount = roster.count { it.estado == AttendanceStatus.PERMISSION }
-        val lateCount = roster.count { it.estado == AttendanceStatus.LATE }
-
-        SummaryCard(modifier = Modifier.weight(1f), count = presentCount, label = "Presente", color = conalepGreen)
-        SummaryCard(modifier = Modifier.weight(1f), count = absentCount, label = "Ausente", color = Color.Red)
-        SummaryCard(modifier = Modifier.weight(1f), count = permissionCount, label = "Permiso", color = Color.Blue)
-        SummaryCard(modifier = Modifier.weight(1f), count = lateCount, label = "Retardo", color = lateColor)
-    }
-}
-
-@Composable
-fun StudentAttendanceRowEdit(
-    alumnoConAsistencia: AlumnoConAsistenciaEdit,
-    onStatusChange: (AttendanceStatus) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier.padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "${alumnoConAsistencia.alumno.matricula} - ${alumnoConAsistencia.alumno.nombreCompleto}",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = label,
+                color = if (selected) Color.White else color,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                )
             )
-
-            Row {
-                StatusIconButton(
-                    status = AttendanceStatus.PRESENT,
-                    isSelected = alumnoConAsistencia.estado == AttendanceStatus.PRESENT,
-                    onClick = { onStatusChange(AttendanceStatus.PRESENT) }
-                )
-                StatusIconButton(
-                    status = AttendanceStatus.ABSENT,
-                    isSelected = alumnoConAsistencia.estado == AttendanceStatus.ABSENT,
-                    onClick = { onStatusChange(AttendanceStatus.ABSENT) }
-                )
-                StatusIconButton(
-                    status = AttendanceStatus.PERMISSION,
-                    isSelected = alumnoConAsistencia.estado == AttendanceStatus.PERMISSION,
-                    onClick = { onStatusChange(AttendanceStatus.PERMISSION) }
-                )
-                StatusIconButton(
-                    status = AttendanceStatus.LATE,
-                    isSelected = alumnoConAsistencia.estado == AttendanceStatus.LATE,
-                    onClick = { onStatusChange(AttendanceStatus.LATE) }
-                )
-            }
         }
-    }
-}
-
-private fun formatearFechaEdit(fecha: String): String {
-    return try {
-        val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val formatoSalida = SimpleDateFormat("EEEE dd 'de' MMMM, yyyy", Locale("es", "ES"))
-        val fechaParsed = formatoEntrada.parse(fecha)
-        fechaParsed?.let { formatoSalida.format(it) } ?: fecha
-    } catch (e: Exception) {
-        fecha
     }
 }

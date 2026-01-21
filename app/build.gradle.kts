@@ -78,4 +78,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.converter.gson)
+
 }

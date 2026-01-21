@@ -1,22 +1,37 @@
 package com.example.conalepApp.api
-
+import com.google.gson.annotations.SerializedName
+// ===== AUTENTICACIÓN =====
 data class LoginRequest(
     val email: String
 )
 
-data class ApiResponse<T>(
+data class RequestOTPRequest(
+    val email: String
+)
+
+data class VerifyOTPRequest(
+    val email: String,
+    val code: String
+)
+
+data class OTPResponse(
     val success: Boolean,
     val message: String,
-    val data: T? = null,
-    val error: String? = null,
-    val code: String? = null
+    val data: OTPData? = null,
+    val error: String? = null
+)
+
+data class OTPData(
+    val email: String,
+    val expiresIn: String
 )
 
 data class LoginResponse(
     val success: Boolean,
     val message: String,
-    val token: String,
-    val user: User
+    val token: String? = null,
+    val user: User? = null,
+    val error: String? = null
 )
 
 data class User(
@@ -25,7 +40,8 @@ data class User(
     val apellido_paterno: String,
     val apellido_materno: String,
     val email: String,
-    val userType: String,
+    @SerializedName("userType")  // ✅ AGREGA ESTO
+    val user_type: String,
     // Campos opcionales según tipo de usuario
     val grado: String? = null,
     val grupo: String? = null,
@@ -36,15 +52,25 @@ data class User(
         get() = "$nombre $apellido_paterno $apellido_materno"
 
     val isAlumno: Boolean
-        get() = userType == "alumno"
+        get() = user_type == "alumno"
 
     val isMaestro: Boolean
-        get() = userType == "maestro"
+        get() = user_type == "maestro"
 
     val isAdministrador: Boolean
-        get() = userType == "administrador"
+        get() = user_type == "administrador"
 }
 
+
+data class ApiResponse<T>(
+    val success: Boolean,
+    val message: String,
+    val data: T? = null,
+    val error: String? = null,
+    val code: String? = null
+)
+
+// ===== MATERIAS =====
 data class MateriaMaestroAPI(
     val clase_id: Int,
     val nombre_clase: String,
@@ -62,6 +88,7 @@ data class MateriaAlumnoAPI(
     val fecha_inscripcion: String
 )
 
+// ===== ASISTENCIAS =====
 data class AlumnoAsistencia(
     val alumno_id: Int,
     val nombre: String,
@@ -96,6 +123,7 @@ data class GuardarAsistenciasRequest(
     val fecha: String,
     val asistencias: List<AsistenciaItem>
 )
+
 data class AsistenciaExistente(
     val alumno_id: Int,
     val nombre: String,
@@ -127,6 +155,7 @@ data class HistorialAsistenciasResponse(
     val historial: List<HistorialItem>
 )
 
+// ===== NOTIFICACIONES =====
 data class MateriaBasica(
     val clase_id: Int,
     val nombre_clase: String,
@@ -140,25 +169,25 @@ data class AlumnoNotificacion(
     val apellido_paterno: String,
     val apellido_materno: String,
     val matricula: String,
-    val grado: String,
-    val grupo: String,
-    val materias_compartidas: String
+    val grado: Int,
+    val grupo: String
 ) {
     val nombreCompleto: String
         get() = "$nombre $apellido_paterno $apellido_materno"
 }
 
 data class NotificacionDestinatarios(
-    val materias: List<MateriaBasica>,
-    val alumnos: List<AlumnoNotificacion>,
-    val total_materias: Int,
-    val total_alumnos: Int
+    val mis_materias: List<MateriaBasica>,
+    val mis_alumnos: List<AlumnoNotificacion>,
+    val alumnos_por_materia: Map<String, List<AlumnoNotificacion>>? = null,
+    val total_materias: Int? = null,
+    val total_alumnos: Int? = null
 )
 
 data class CrearNotificacionRequest(
     val titulo: String,
     val mensaje: String,
-    val tipo_destinatario: String, // "Alumno_Especifico", "Materia_Completa", "Multiples_Materias"
+    val tipo_destinatario: String,
     val destinatarios: List<Int>
 )
 
@@ -172,9 +201,27 @@ data class NotificacionItem(
     val destinatarios_info: String? = null,
     val creado_por_tipo: String? = null
 )
+
 data class CrearNotificacionResult(
     val notificacion_id: Int,
-    val status: String,
-    val titulo: String,
-    val destinatarios: Int
+    val mensaje: String,
+    val status: String
+)
+data class GenerarReportePDFRequest(
+    val clase_id: Int,
+    val fecha_inicio: String,  // yyyy-MM-dd
+    val fecha_fin: String      // yyyy-MM-dd
+)
+
+data class ReportePDFResponse(
+    val success: Boolean,
+    val message: String,
+    val data: ReportePDFData? = null,
+    val error: String? = null
+)
+
+data class ReportePDFData(
+    val nombre_archivo: String,
+    val url: String,
+    val tamano: Long
 )
